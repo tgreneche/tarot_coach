@@ -1,0 +1,23 @@
+# Flutter
+.build/
+.dart_tool/
+.packages
+.pub/
+build/
+
+# Android
+.gradle/
+local.properties
+*.keystore
+*.jks
+
+# iOS
+Pods/
+Runner.xcworkspace/
+
+# IDE
+.idea/
+.vscode/
+
+# Misc
+.DS_Store
