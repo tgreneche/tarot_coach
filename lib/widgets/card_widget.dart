@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../models/card.dart';
 import '../services/card_image_service.dart';
 
@@ -22,8 +23,7 @@ class TarotCardWidget extends StatelessWidget {
   });
 
   Color _cardColor(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    if (isPlayed) return scheme.surfaceContainerHighest.withValues(alpha: 0.5);
+    if (isPlayed) return AppTheme.mort.withValues(alpha: 0.15);
     if (card.isBout) return const Color(0xFFFFD54F);
     if (card.isTrump) return const Color(0xFFA5D6A7);
     return switch (card.suit) {
@@ -31,12 +31,12 @@ class TarotCardWidget extends StatelessWidget {
       TarotSuit.carreau => const Color(0xFFFFCDD2),
       TarotSuit.trefle => const Color(0xFFBBDEFB),
       TarotSuit.pique => const Color(0xFFBBDEFB),
-      _ => scheme.surfaceContainerHighest,
+      _ => AppTheme.surface,
     };
   }
 
   Color _textColor(BuildContext context) {
-    if (isPlayed) return Colors.grey;
+    if (isPlayed) return AppTheme.mort;
     if (card.suit == TarotSuit.coeur || card.suit == TarotSuit.carreau) {
       return Colors.red.shade800;
     }
@@ -48,7 +48,6 @@ class TarotCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final bgColor = _cardColor(context);
     final txtColor = _textColor(context);
     final imageService = CardImageService.instance;
@@ -71,13 +70,13 @@ class TarotCardWidget extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? scheme.primary : scheme.outlineVariant,
+            color: isSelected ? AppTheme.gold : AppTheme.textSecondary.withValues(alpha: 0.3),
             width: isSelected ? 3 : 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: scheme.primary.withValues(alpha: 0.3),
+                    color: AppTheme.gold.withValues(alpha: 0.3),
                     blurRadius: 8,
                     spreadRadius: 1,
                   )
@@ -138,7 +137,7 @@ class TarotCardWidget extends StatelessWidget {
                 child: Icon(
                   Icons.check_circle,
                   size: size * 0.22,
-                  color: scheme.primary,
+                  color: AppTheme.gold,
                 ),
               ),
             // Barré si jouée
@@ -147,7 +146,7 @@ class TarotCardWidget extends StatelessWidget {
                 child: Icon(
                   Icons.close,
                   size: size * 0.5,
-                  color: Colors.red.withValues(alpha: 0.4),
+                  color: AppTheme.error.withValues(alpha: 0.4),
                 ),
               ),
           ],

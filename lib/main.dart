@@ -8,6 +8,14 @@ import 'services/storage_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Status bar transparente pour un look immersif
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: AppTheme.primaryDark,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+
   // Initialiser la persistance locale
   await StorageService.instance.init();
 
@@ -22,10 +30,103 @@ class TarotCoachApp extends StatelessWidget {
     return MaterialApp(
       title: 'TarotCoach',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
-      home: const _OrientationWrapper(child: HomeScreen()),
+      theme: AppTheme.theme,
+      home: const _SplashGate(),
+    );
+  }
+}
+
+/// Affiche un splash screen animé puis transite vers le contenu principal.
+class _SplashGate extends StatefulWidget {
+  const _SplashGate();
+
+  @override
+  State<_SplashGate> createState() => _SplashGateState();
+}
+
+class _SplashGateState extends State<_SplashGate>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeScale;
+  late Animation<double> _lineWidth;
+  bool _showHome = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeScale = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.75, curve: Curves.easeOutCubic),
+    );
+
+    _lineWidth = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.25, 1.0, curve: Curves.easeOutCubic),
+    );
+
+    _controller.forward();
+
+    // Transition vers l'écran d'accueil après 1.8s
+    Future.delayed(const Duration(milliseconds: 1800), () {
+      if (mounted) setState(() => _showHome = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_showHome) {
+      return const _OrientationWrapper(child: HomeScreen());
+    }
+
+    return Scaffold(
+      backgroundColor: AppTheme.primary,
+      body: Center(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _fadeScale.value,
+              child: Transform.scale(
+                scale: 0.9 + 0.1 * _fadeScale.value,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'CoachTarot',
+                      style: AppTheme.titleFont(
+                        fontSize: 38,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Liseré doré animé
+                    Container(
+                      width: 60 * _lineWidth.value,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: AppTheme.gold,
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

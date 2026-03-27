@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import '../theme/app_theme.dart';
 
 /// Écran de consultation des règles officielles du Tarot (PDF FFT).
 class RulesScreen extends StatefulWidget {
@@ -37,8 +38,6 @@ class _RulesScreenState extends State<RulesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Règles du Tarot'),
@@ -72,22 +71,24 @@ class _RulesScreenState extends State<RulesScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.picture_as_pdf,
-                        size: 64, color: scheme.onSurfaceVariant),
+                    const Icon(Icons.picture_as_pdf,
+                        size: 64, color: AppTheme.textSecondary),
                     const SizedBox(height: 16),
                     Text(
                       'PDF des règles non trouvé',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 16,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Placez le fichier des règles FFT à :\n$_assetPath',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),

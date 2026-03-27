@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../models/card.dart';
 import '../models/hand.dart';
 import '../widgets/card_widget.dart';
@@ -64,7 +65,6 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final rec = widget.analysis.recommendation;
 
     return Scaffold(
@@ -99,9 +99,9 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                                   alignment: Alignment.center,
                                   transform: Matrix4.identity()
                                     ..rotateY(math.pi),
-                                  child: _buildBackSide(scheme, fixedHeight),
+                                  child: _buildBackSide(fixedHeight),
                                 )
-                              : _buildFrontSide(scheme, rec, fixedHeight),
+                              : _buildFrontSide(rec, fixedHeight),
                         ),
                       );
                     },
@@ -134,7 +134,7 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                             child: LinearProgressIndicator(
                               value: widget.analysis.handStrength / 100,
                               minHeight: 20,
-                              backgroundColor: scheme.surfaceContainerHighest,
+                              backgroundColor: AppTheme.primaryDark,
                               color:
                                   _strengthColor(widget.analysis.handStrength),
                             ),
@@ -143,10 +143,10 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                         const SizedBox(width: 12),
                         Text(
                           '${widget.analysis.handStrength.round()}/100',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: AppTheme.titleFont(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
@@ -173,28 +173,28 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                       value: '${widget.analysis.trumpCount}',
                       subtitle: 'sur 22 (Excuse incl.)',
                       icon: Icons.star,
-                      color: Colors.green.shade700,
+                      color: AppTheme.success,
                     ),
                     StatCard(
                       title: 'Bouts',
                       value: '${widget.analysis.boutCount}',
                       subtitle: 'Obj: ${widget.analysis.pointsNeeded} pts',
                       icon: Icons.emoji_events,
-                      color: Colors.orange.shade700,
+                      color: AppTheme.gold,
                     ),
                     StatCard(
                       title: 'Points',
                       value: widget.analysis.totalPoints.toStringAsFixed(1),
                       subtitle: 'dans la main',
                       icon: Icons.score,
-                      color: Colors.blue.shade700,
+                      color: AppTheme.appele,
                     ),
                     StatCard(
                       title: 'Rois',
                       value: '${widget.analysis.kingCount}',
                       subtitle: '${widget.analysis.faceCount} figures',
                       icon: Icons.shield,
-                      color: Colors.purple.shade700,
+                      color: AppTheme.goldDark,
                     ),
                   ],
                 );
@@ -239,7 +239,10 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
             // === POIGNÉE ===
             if (widget.analysis.possibleHandle != null)
               Card(
-                color: scheme.tertiaryContainer,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3)),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
@@ -321,9 +324,10 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                         children: widget.analysis.bouts
                             .map((b) => Chip(
                                   avatar: const Icon(Icons.emoji_events,
-                                      size: 18),
+                                      size: 18, color: AppTheme.gold),
                                   label: Text(b.displayName),
-                                  backgroundColor: Colors.orange.shade100,
+                                  backgroundColor: AppTheme.gold.withValues(alpha: 0.15),
+                                  side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3)),
                                 ))
                             .toList(),
                       ),
@@ -378,22 +382,11 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
     );
   }
 
-  /// Calcule la hauteur fixe du flip card.
-  /// On se base uniquement sur le back side (grille de cartes)
-  /// qui est le contenu le plus prévisible, avec une hauteur minimum
-  /// pour que le front (recommandation) ait toujours assez de place.
   double _computeFlipCardHeight(double availableWidth, int cardCount) {
-    // Padding du Card widget (Padding(12) × 2 côtés)
     const cardPadding = 12.0 * 2;
-    // Marge interne du Card Material 3 (elevation shadow + border shape)
     const cardChrome = 8.0;
-
-    // --- BACK : titleRow + spacing + grille + spacing + hintRow ---
-    // titleRow : Icon(18) + lineHeight → ~28px réel
     const titleRow = 28.0;
-    // hintRow : Icon(14) + text bodySmall lineHeight → ~22px réel
     const hintRow = 22.0;
-    // SizedBox(height: 10) × 2
     const vertSpacing = 10.0 + 10.0;
 
     final innerWidth = availableWidth - cardPadding;
@@ -402,26 +395,29 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
     final backContent = titleRow + vertSpacing + grid.gridHeight + hintRow;
     final backHeight = backContent + cardPadding + cardChrome;
 
-    // --- FRONT : hauteur minimum pour la recommandation ---
-    // emoji(48) + SizedBox(8) + headline(~30) + SizedBox(4)
-    // + confidenceRow(~26) + SizedBox(4) + progressBar(8) + SizedBox(12)
-    // + reasoning(~80 pour 3-4 lignes) + SizedBox(8) + hintRow(~22)
-    // + padding(20×2) + cardChrome
     const frontMinHeight =
         48 + 8 + 30 + 4 + 26 + 4 + 8 + 12 + 80 + 8 + 22 + 40 + cardChrome;
 
     return math.max(frontMinHeight, backHeight);
   }
 
-  /// Face avant — Recommandation de contrat (hauteur fixe, contenu centré).
-  Widget _buildFrontSide(
-      ColorScheme scheme, ContractRecommendation rec, double height) {
+  /// Face avant — Recommandation de contrat.
+  Widget _buildFrontSide(ContractRecommendation rec, double height) {
+    final isPasse = rec.contract == ContractType.passe;
     return SizedBox(
       height: height,
       child: Card(
-        color: rec.contract == ContractType.passe
-            ? scheme.errorContainer
-            : scheme.primaryContainer,
+        color: isPasse
+            ? const Color(0xFF5C1A1A)
+            : AppTheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(
+            color: isPasse
+                ? AppTheme.error.withValues(alpha: 0.3)
+                : AppTheme.gold.withValues(alpha: 0.3),
+          ),
+        ),
         clipBehavior: Clip.antiAlias,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -436,10 +432,10 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                 const SizedBox(height: 8),
                 Text(
                   rec.contract.label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: AppTheme.titleFont(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -449,10 +445,10 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                     const SizedBox(width: 4),
                     Text(
                       rec.confidenceLabel,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w500),
+                      style: AppTheme.bodyFont(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
@@ -462,7 +458,7 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                   child: LinearProgressIndicator(
                     value: rec.confidence,
                     minHeight: 8,
-                    backgroundColor: scheme.surface.withValues(alpha: 0.3),
+                    backgroundColor: AppTheme.primaryDark,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -478,18 +474,15 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                     Icon(
                       Icons.touch_app,
                       size: 14,
-                      color:
-                          scheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: AppTheme.textSecondary.withValues(alpha: 0.5),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'Appuyez 2× pour voir votre main',
-                      style:
-                          Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant
-                                    .withValues(alpha: 0.5),
-                                fontStyle: FontStyle.italic,
-                              ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                      ),
                     ),
                   ],
                 ),
@@ -501,14 +494,12 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
     );
   }
 
-  /// Face arrière — Grille des cartes (hauteur fixe, contenu centré).
-  /// Utilise _computeGridMetrics pour garantir la cohérence avec le calcul
-  /// de hauteur.
-  Widget _buildBackSide(ColorScheme scheme, double height) {
+  /// Face arrière — Grille des cartes.
+  Widget _buildBackSide(double height) {
     return SizedBox(
       height: height,
       child: Card(
-        color: scheme.surfaceContainerHigh,
+        color: AppTheme.surface,
         clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -518,21 +509,19 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.style, size: 18, color: scheme.primary),
+                  const Icon(Icons.style, size: 18, color: AppTheme.gold),
                   const SizedBox(width: 6),
                   Text(
                     'Votre main',
-                    style:
-                        Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: scheme.primary,
-                            ),
+                    style: AppTheme.bodyFont(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.gold,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              // Grille de cartes — utilise les mêmes métriques
-              // que _computeFlipCardHeight
               LayoutBuilder(
                 builder: (context, constraints) {
                   final count = widget.selectedCards.length;
@@ -563,18 +552,15 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                   Icon(
                     Icons.touch_app,
                     size: 14,
-                    color:
-                        scheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    color: AppTheme.textSecondary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     'Appuyez 2× pour revenir',
-                    style:
-                        Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant
-                                  .withValues(alpha: 0.5),
-                              fontStyle: FontStyle.italic,
-                            ),
+                    style: AppTheme.bodyFont(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary.withValues(alpha: 0.5),
+                    ),
                   ),
                 ],
               ),
@@ -586,10 +572,10 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
   }
 
   Color _strengthColor(double strength) {
-    if (strength >= 65) return Colors.green.shade600;
-    if (strength >= 45) return Colors.orange.shade600;
-    if (strength >= 30) return Colors.deepOrange.shade600;
-    return Colors.red.shade600;
+    if (strength >= 65) return AppTheme.success;
+    if (strength >= 45) return AppTheme.gold;
+    if (strength >= 30) return AppTheme.goldDark;
+    return AppTheme.error;
   }
 }
 
@@ -623,7 +609,6 @@ class _DistributionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final barColor =
         (suit == TarotSuit.coeur || suit == TarotSuit.carreau)
             ? Colors.red.shade400
@@ -650,7 +635,7 @@ class _DistributionBar extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: count / maxCount,
                   minHeight: 12,
-                  backgroundColor: scheme.surfaceContainerHighest,
+                  backgroundColor: AppTheme.primaryDark,
                   color: barColor,
                 ),
               ),

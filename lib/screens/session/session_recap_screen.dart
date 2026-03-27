@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import '../../models/session.dart';
 import '../../models/donne.dart';
 
@@ -10,7 +11,6 @@ class SessionRecapScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final classement = session.classement;
     final prises = session.prisesParJoueur;
     final taux = session.tauxReussiteParJoueur;
@@ -24,7 +24,10 @@ class SessionRecapScreen extends StatelessWidget {
           children: [
             // === Classement final ===
             Card(
-              color: scheme.primaryContainer,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3)),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -33,14 +36,17 @@ class SessionRecapScreen extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Classement final',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: AppTheme.titleFont(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       '${session.nbDonnesJouees} donnes jouées',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: AppTheme.bodyFont(
+                        fontSize: 14,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     for (var rank = 0; rank < classement.length; rank++)
@@ -72,7 +78,8 @@ class SessionRecapScreen extends StatelessWidget {
                         prises[i] ?? 0,
                         taux[i] ?? 0,
                       ),
-                      if (i < session.nbJoueurs - 1) const Divider(),
+                      if (i < session.nbJoueurs - 1)
+                        Divider(color: AppTheme.textSecondary.withValues(alpha: 0.2)),
                     ],
                   ],
                 ),
@@ -95,7 +102,7 @@ class SessionRecapScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _StatRow(
                       icon: Icons.arrow_upward,
-                      color: Colors.green,
+                      color: AppTheme.success,
                       label: 'Meilleur score sur une donne',
                       value: session.meilleurePerformance != null
                           ? '+${session.meilleurePerformance!.value}'
@@ -103,7 +110,7 @@ class SessionRecapScreen extends StatelessWidget {
                     ),
                     _StatRow(
                       icon: Icons.arrow_downward,
-                      color: Colors.red,
+                      color: AppTheme.error,
                       label: 'Pire score sur une donne',
                       value: session.pirePerformance != null
                           ? '${session.pirePerformance!.value}'
@@ -111,19 +118,19 @@ class SessionRecapScreen extends StatelessWidget {
                     ),
                     _StatRow(
                       icon: Icons.shield,
-                      color: Colors.orange,
+                      color: AppTheme.gold,
                       label: 'Gardes Sans tentées',
                       value: '${session.nbGardesSans}',
                     ),
                     _StatRow(
                       icon: Icons.local_fire_department,
-                      color: Colors.red,
+                      color: AppTheme.error,
                       label: 'Gardes Contre tentées',
                       value: '${session.nbGardesContre}',
                     ),
                     _StatRow(
                       icon: Icons.emoji_events,
-                      color: Colors.purple,
+                      color: AppTheme.appele,
                       label: 'Chelems',
                       value: '${session.nbChelems}',
                     ),
@@ -184,6 +191,7 @@ class SessionRecapScreen extends StatelessWidget {
               style: TextStyle(
                 fontWeight: rank == 0 ? FontWeight.bold : FontWeight.normal,
                 fontSize: rank == 0 ? 16 : 14,
+                color: rank == 0 ? AppTheme.gold : AppTheme.textPrimary,
               ),
             ),
           ),
@@ -192,11 +200,8 @@ class SessionRecapScreen extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: rank == 0 ? 20 : 16,
-              color: score > 0
-                  ? Colors.green.shade700
-                  : score < 0
-                      ? Colors.red.shade700
-                      : null,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              color: AppTheme.scoreColor(score),
             ),
           ),
         ],

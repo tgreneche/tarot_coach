@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import '../../models/session.dart';
 import '../../services/storage_service.dart';
 import 'session_recap_screen.dart';
@@ -43,7 +44,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: AppTheme.error,
             ),
             child: const Text('Supprimer'),
           ),
@@ -74,7 +75,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: AppTheme.error,
             ),
             child: const Text('Tout supprimer'),
           ),
@@ -89,8 +90,6 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historique des sessions'),
@@ -108,14 +107,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.history,
-                      size: 64, color: scheme.onSurfaceVariant),
+                  const Icon(Icons.history,
+                      size: 64, color: AppTheme.textSecondary),
                   const SizedBox(height: 16),
                   Text(
                     'Aucune session terminée',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                    style: AppTheme.bodyFont(
+                      fontSize: 16,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -148,27 +148,27 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.calendar_today,
-                                  size: 14, color: scheme.primary),
+                              const Icon(Icons.calendar_today,
+                                  size: 14, color: AppTheme.gold),
                               const SizedBox(width: 6),
                               Text(
                                 _formatDate(session.dateCreation),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(color: scheme.primary),
+                                style: AppTheme.bodyFont(
+                                  fontSize: 12,
+                                  color: AppTheme.gold,
+                                ),
                               ),
                               const Spacer(),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: scheme.surfaceContainerHighest,
+                                  color: AppTheme.primaryDark,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   '${session.nbJoueurs}J — ${session.nbDonnesJouees} donnes',
-                                  style: const TextStyle(fontSize: 11),
+                                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
                                 ),
                               ),
                             ],
@@ -203,9 +203,9 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                                 Text(
                                   '${vainqueur.name} — '
                                   '+${classement.first.value}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.green.shade700,
+                                    color: AppTheme.success,
                                   ),
                                 ),
                               ],

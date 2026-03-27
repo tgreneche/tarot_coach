@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import '../../models/player.dart';
 import '../../models/session.dart';
 import '../../services/storage_service.dart';
@@ -21,7 +22,6 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final suggestions = SuggestionsDonnes.pourJoueurs(_nbJoueurs);
     final canStart =
         _selectedPlayers.length == _nbJoueurs &&
@@ -74,9 +74,10 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                           6 => '6 joueurs — avec un mort par donne',
                           _ => '',
                         },
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                        style: AppTheme.bodyFont(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ),
                   ],
@@ -138,27 +139,33 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                             ),
                             title: Text(p.name),
                             subtitle:
-                                i == 0 ? const Text('Premier donneur') : null,
-                            trailing: const Icon(Icons.drag_handle),
+                                i == 0 ? Text('Premier donneur',
+                                    style: AppTheme.bodyFont(
+                                      fontSize: 12,
+                                      color: AppTheme.gold,
+                                    )) : null,
+                            trailing: const Icon(Icons.drag_handle,
+                                color: AppTheme.textSecondary),
                           );
                         },
                       ),
                       Text(
                         'Glissez pour changer l\'ordre autour de la table.\n'
                         'Le premier sera le premier donneur.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                        style: AppTheme.bodyFont(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ] else
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
                           'Sélectionnez $_nbJoueurs joueurs depuis le carnet',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                          style: AppTheme.bodyFont(
+                            fontSize: 14,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ),
                   ],
@@ -219,10 +226,10 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                       Text(
                         'Multiples de $_nbJoueurs pour que chacun donne '
                         'le même nombre de fois.',
-                        style:
-                            Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
+                        style: AppTheme.bodyFont(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ],
@@ -297,7 +304,6 @@ class _PlayerCountChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -305,10 +311,10 @@ class _PlayerCountChip extends StatelessWidget {
         width: 52,
         height: 52,
         decoration: BoxDecoration(
-          color: selected ? scheme.primary : scheme.surfaceContainerHigh,
+          color: selected ? AppTheme.gold : AppTheme.surface,
           shape: BoxShape.circle,
           border: Border.all(
-            color: selected ? scheme.primary : scheme.outlineVariant,
+            color: selected ? AppTheme.gold : AppTheme.textSecondary.withValues(alpha: 0.3),
             width: selected ? 2 : 1,
           ),
         ),
@@ -318,7 +324,7 @@ class _PlayerCountChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+            color: selected ? AppTheme.primaryDark : AppTheme.textSecondary,
           ),
         ),
       ),

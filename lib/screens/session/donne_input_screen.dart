@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import '../../models/player.dart';
 import '../../models/donne.dart';
 import '../../engine/donne_score_engine.dart';
@@ -149,7 +150,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.message),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: AppTheme.error,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -181,7 +182,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('⚠️ Erreur de calcul : la somme des scores n\'est pas nulle'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.error,
         ),
       );
       return;
@@ -212,7 +213,6 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final objectif = pointsRequis(_nbBouts);
     final fait = _pointsPreneur >= objectif;
 
@@ -232,14 +232,15 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(
                 children: [
-                  Icon(Icons.front_hand, size: 16, color: scheme.primary),
+                  const Icon(Icons.front_hand, size: 16, color: AppTheme.gold),
                   const SizedBox(width: 6),
                   Text(
                     'Donneur : ${widget.joueurs[widget.donneurIndex].name}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    style: AppTheme.bodyFont(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.gold,
+                    ),
                   ),
                 ],
               ),
@@ -252,20 +253,20 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                    color: AppTheme.mort.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.pause_circle, size: 16, color: Colors.grey.shade600),
+                      const Icon(Icons.pause_circle, size: 16, color: AppTheme.mort),
                       const SizedBox(width: 6),
                       Text(
                         'Mort : ${widget.joueurs[widget.mortIndex!].name}',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
+                        style: AppTheme.bodyFont(
                           fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.mort,
                         ),
                       ),
                     ],
@@ -369,8 +370,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
               Card(
                 shape: _errorField == 'roi' || _errorField == 'appele'
                     ? RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: Colors.red.shade400, width: 2),
+                        borderRadius: BorderRadius.circular(14),
+                        side: const BorderSide(color: AppTheme.error, width: 2),
                       )
                     : null,
                 child: Padding(
@@ -383,12 +384,12 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                           Expanded(
                             child: Text('Roi appelé',
                                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      color: _errorField == 'roi' ? Colors.red.shade700 : null,
+                                      color: _errorField == 'roi' ? AppTheme.error : null,
                                     )),
                           ),
                           if (_errorField == 'roi')
                             Text(_validationError ?? '',
-                                style: TextStyle(fontSize: 11, color: Colors.red.shade700)),
+                                style: const TextStyle(fontSize: 11, color: AppTheme.error)),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -418,12 +419,12 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                             child: Text('Qui avait le Roi ?',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color: _errorField == 'appele' ? Colors.red.shade700 : null,
+                                      color: _errorField == 'appele' ? AppTheme.error : null,
                                     )),
                           ),
                           if (_errorField == 'appele')
                             Text(_validationError ?? '',
-                                style: TextStyle(fontSize: 11, color: Colors.red.shade700)),
+                                style: const TextStyle(fontSize: 11, color: AppTheme.error)),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -525,8 +526,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                                   horizontal: 12, vertical: 4),
                               decoration: BoxDecoration(
                                 color: fait
-                                    ? Colors.green.shade100
-                                    : Colors.red.shade100,
+                                    ? AppTheme.success.withValues(alpha: 0.2)
+                                    : AppTheme.error.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -538,8 +539,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: fait
-                                          ? Colors.green.shade800
-                                          : Colors.red.shade800,
+                                          ? AppTheme.success
+                                          : AppTheme.error,
                                     ),
                               ),
                             ),
@@ -558,12 +559,11 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                       'Objectif : $objectif pts '
                       '(${fait ? "✅ Fait" : "❌ Chuté"} '
                       '${fait ? "+${(_pointsPreneur - objectif).toStringAsFixed(1)}" : "${(_pointsPreneur - objectif).toStringAsFixed(1)}"})',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: fait
-                                ? Colors.green.shade700
-                                : Colors.red.shade700,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: fait ? AppTheme.success : AppTheme.error,
+                      ),
                     ),
                   ],
                 ),
@@ -664,6 +664,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                         contentPadding: EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                       ),
+                      dropdownColor: AppTheme.surface,
                       items: Chelem.values
                           .map((c) => DropdownMenuItem(
                                 value: c,
@@ -730,9 +731,8 @@ class _ContratButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Material(
-      color: selected ? scheme.primaryContainer : scheme.surfaceContainerHigh,
+      color: selected ? AppTheme.gold : AppTheme.surface,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
@@ -743,7 +743,7 @@ class _ContratButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? scheme.primary : scheme.outlineVariant,
+              color: selected ? AppTheme.gold : AppTheme.textSecondary.withValues(alpha: 0.3),
               width: selected ? 2 : 1,
             ),
           ),
@@ -755,8 +755,8 @@ class _ContratButton extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                 color: selected
-                    ? scheme.onPrimaryContainer
-                    : scheme.onSurfaceVariant,
+                    ? AppTheme.primaryDark
+                    : AppTheme.textSecondary,
               ),
             ),
           ),

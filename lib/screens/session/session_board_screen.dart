@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import '../../models/player.dart';
 import '../../models/session.dart';
 import '../../models/donne.dart';
@@ -145,7 +146,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
+                backgroundColor: AppTheme.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -170,20 +171,13 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Container(
-                    width: 40, height: 4,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
+                AppTheme.bottomSheetHandle(),
                 const SizedBox(height: 16),
                 Text('Aide-mémoire',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        )),
+                    style: AppTheme.titleFont(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    )),
                 const SizedBox(height: 16),
                 // Points requis
                 Text('Points requis selon les bouts',
@@ -193,7 +187,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                 _aideMemoireRow('1 bout', '51 pts'),
                 _aideMemoireRow('2 bouts', '41 pts'),
                 _aideMemoireRow('3 bouts', '36 pts'),
-                const Divider(height: 20),
+                Divider(color: AppTheme.textSecondary.withValues(alpha: 0.2), height: 20),
                 // Multiplicateurs
                 Text('Multiplicateurs de contrat',
                     style: Theme.of(context).textTheme.titleSmall),
@@ -202,7 +196,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                 _aideMemoireRow('Garde', '×2'),
                 _aideMemoireRow('Garde Sans', '×4'),
                 _aideMemoireRow('Garde Contre', '×6'),
-                const Divider(height: 20),
+                Divider(color: AppTheme.textSecondary.withValues(alpha: 0.2), height: 20),
                 // Poignée
                 Text('Poignée ($nb joueurs)',
                     style: Theme.of(context).textTheme.titleSmall),
@@ -213,7 +207,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                     '${_seuilPoignee(nb, 'double')} atouts'),
                 _aideMemoireRow('Triple (+40)',
                     '${_seuilPoignee(nb, 'triple')} atouts'),
-                const Divider(height: 20),
+                Divider(color: AppTheme.textSecondary.withValues(alpha: 0.2), height: 20),
                 // Chelem
                 Text('Chelem',
                     style: Theme.of(context).textTheme.titleSmall),
@@ -221,7 +215,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                 _aideMemoireRow('Annoncé et réussi', '+400'),
                 _aideMemoireRow('Non annoncé, réussi', '+200'),
                 _aideMemoireRow('Annoncé et chuté', '-200'),
-                const Divider(height: 20),
+                Divider(color: AppTheme.textSecondary.withValues(alpha: 0.2), height: 20),
                 // Petit au bout
                 Text('Petit au bout',
                     style: Theme.of(context).textTheme.titleSmall),
@@ -242,10 +236,10 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13)),
+          Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
           Text(value,
               style:
-                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.gold)),
         ],
       ),
     );
@@ -256,7 +250,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
       3: {'simple': 13, 'double': 15, 'triple': 18},
       4: {'simple': 10, 'double': 13, 'triple': 15},
       5: {'simple': 8, 'double': 10, 'triple': 13},
-      6: {'simple': 8, 'double': 10, 'triple': 13}, // Mêmes que 5 (15 cartes/joueur actif)
+      6: {'simple': 8, 'double': 10, 'triple': 13},
     };
     return '${seuils[nbJoueurs]?[type] ?? '?'}';
   }
@@ -297,7 +291,6 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final classement = _session.classement;
 
     return Scaffold(
@@ -364,36 +357,37 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
         controller: _tabController,
         children: [
           // === Onglet Classement ===
-          _buildClassement(classement, scheme),
+          _buildClassement(classement),
           // === Onglet Historique des donnes ===
-          _buildHistorique(scheme),
+          _buildHistorique(),
         ],
       ),
     );
   }
 
-  Widget _buildClassement(
-      List<MapEntry<int, int>> classement, ColorScheme scheme) {
+  Widget _buildClassement(List<MapEntry<int, int>> classement) {
     if (_session.donnes.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.scoreboard_outlined,
-                size: 64, color: scheme.onSurfaceVariant),
+            const Icon(Icons.scoreboard_outlined,
+                size: 64, color: AppTheme.textSecondary),
             const SizedBox(height: 16),
             Text(
               'Aucune donne jouée',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: AppTheme.bodyFont(
+                fontSize: 16,
+                color: AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Appuyez sur + pour saisir la première donne',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: AppTheme.bodyFont(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+              ),
             ),
           ],
         ),
@@ -411,10 +405,10 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
         // Donneur actuel + mort
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: scheme.surfaceContainerLow,
+          color: AppTheme.primaryDark,
           child: Row(
             children: [
-              Icon(Icons.front_hand, size: 16, color: scheme.primary),
+              const Icon(Icons.front_hand, size: 16, color: AppTheme.gold),
               const SizedBox(width: 8),
               Expanded(
                 child: Text.rich(
@@ -422,18 +416,20 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                     children: [
                       TextSpan(
                         text: 'Donneur : $prochainDonneur',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.primary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                        style: AppTheme.bodyFont(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.gold,
+                        ),
                       ),
                       if (prochainMort != null) ...[
                         TextSpan(
                           text: '  ·  Mort : $prochainMort',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          style: AppTheme.bodyFont(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.mort,
+                          ),
                         ),
                       ],
                     ],
@@ -464,16 +460,15 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
         // Contenu selon le mode
         Expanded(
           child: _vueDetaillee
-              ? _buildVueDetaillee(scheme)
-              : _buildVueSynthetique(classement, scheme),
+              ? _buildVueDetaillee()
+              : _buildVueSynthetique(classement),
         ),
       ],
     );
   }
 
-  /// Vue synthétique (l'ancienne vue classement, inchangée).
-  Widget _buildVueSynthetique(
-      List<MapEntry<int, int>> classement, ColorScheme scheme) {
+  /// Vue synthétique (classement).
+  Widget _buildVueSynthetique(List<MapEntry<int, int>> classement) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: classement.length,
@@ -490,7 +485,12 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                     : '${rank + 1}.';
 
         return Card(
-          color: rank == 0 ? scheme.primaryContainer : null,
+          shape: rank == 0
+              ? RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3)),
+                )
+              : null,
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: joueur.color,
@@ -510,6 +510,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                     style: TextStyle(
                       fontWeight:
                           rank == 0 ? FontWeight.bold : FontWeight.normal,
+                      color: rank == 0 ? AppTheme.gold : AppTheme.textPrimary,
                     ),
                   ),
                 ),
@@ -520,11 +521,8 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: score > 0
-                    ? Colors.green.shade700
-                    : score < 0
-                        ? Colors.red.shade700
-                        : scheme.onSurface,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: AppTheme.scoreColor(score),
               ),
             ),
           ),
@@ -534,7 +532,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
   }
 
   /// Vue détaillée — tableau donne × joueur avec colonne sticky.
-  Widget _buildVueDetaillee(ColorScheme scheme) {
+  Widget _buildVueDetaillee() {
     final joueurs = _session.joueurs;
     final donnes = _session.donnes;
     final cumuls = _session.scoresCumules;
@@ -544,7 +542,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
       children: [
         // En-tête (sticky row)
         Container(
-          color: scheme.surfaceContainerHighest,
+          color: AppTheme.surface,
           child: Row(
             children: [
               // Coin sticky vide
@@ -554,10 +552,11 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Center(
                     child: Text('#',
-                        style:
-                            Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                )),
+                        style: AppTheme.bodyFont(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.gold,
+                        )),
                   ),
                 ),
               ),
@@ -569,10 +568,11 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                     child: Center(
                       child: Text(
                         joueurs[j].name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: AppTheme.bodyFont(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.gold,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -584,34 +584,34 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
         // Légende preneur / appelé
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          color: scheme.surfaceContainerLow,
+          color: AppTheme.primaryDark,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Container(width: 12, height: 8,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(30),
-                  border: Border(bottom: BorderSide(color: scheme.primary, width: 2)),
+                  color: AppTheme.gold.withValues(alpha: 0.15),
+                  border: const Border(bottom: BorderSide(color: AppTheme.gold, width: 2)),
                 ),
               ),
               const SizedBox(width: 4),
-              Text('Preneur', style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant)),
+              Text('Preneur', style: AppTheme.bodyFont(fontSize: 10, color: AppTheme.textSecondary)),
               if (_session.nbJoueurs >= 5) ...[
                 const SizedBox(width: 10),
                 Container(width: 12, height: 8,
                   decoration: BoxDecoration(
-                    color: scheme.tertiary.withAlpha(20),
-                    border: Border(bottom: BorderSide(color: scheme.tertiary, width: 1.5)),
+                    color: AppTheme.appele.withValues(alpha: 0.1),
+                    border: const Border(bottom: BorderSide(color: AppTheme.appele, width: 1.5)),
                   ),
                 ),
                 const SizedBox(width: 4),
-                Text('Appelé', style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant)),
+                Text('Appelé', style: AppTheme.bodyFont(fontSize: 10, color: AppTheme.textSecondary)),
               ],
               if (_session.is6Joueurs) ...[
                 const SizedBox(width: 10),
-                Text('—', style: TextStyle(fontSize: 10, color: Colors.grey.shade500, fontWeight: FontWeight.bold)),
+                Text('—', style: AppTheme.bodyFont(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.mort)),
                 const SizedBox(width: 4),
-                Text('Mort', style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant)),
+                Text('Mort', style: AppTheme.bodyFont(fontSize: 10, color: AppTheme.textSecondary)),
               ],
             ],
           ),
@@ -624,13 +624,18 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
             itemBuilder: (ctx, i) {
               final isTotal = i == donnes.length;
               final bgColor = isTotal
-                  ? scheme.primaryContainer
+                  ? AppTheme.surface
                   : i.isEven
-                      ? scheme.surface
-                      : scheme.surfaceContainerLow;
+                      ? AppTheme.primary
+                      : AppTheme.surfaceLight;
               return Container(
                 height: 40,
-                color: bgColor,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  border: isTotal
+                      ? const Border(top: BorderSide(color: AppTheme.gold, width: 1))
+                      : null,
+                ),
                 child: Row(
                   children: [
                     // Numéro de donne / Total
@@ -643,9 +648,10 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                             fontSize: 12,
                             fontWeight:
                                 isTotal ? FontWeight.bold : FontWeight.w500,
+                            fontFeatures: const [FontFeature.tabularFigures()],
                             color: isTotal
-                                ? scheme.onPrimaryContainer
-                                : scheme.onSurface,
+                                ? AppTheme.gold
+                                : AppTheme.textSecondary,
                           ),
                         ),
                       ),
@@ -654,7 +660,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                     for (var j = 0; j < joueurs.length; j++)
                       Expanded(
                         child: !isTotal && donnes[i].mortIndex == j
-                            ? _buildMortCell(scheme)
+                            ? _buildMortCell()
                             : _buildDetailCell(
                                 score: isTotal
                                     ? cumuls[j] ?? 0
@@ -662,7 +668,6 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                                 isTotal: isTotal,
                                 isPreneur: !isTotal && donnes[i].preneurIndex == j,
                                 isAppele: !isTotal && donnes[i].appeleIndex == j && donnes[i].appeleIndex != donnes[i].preneurIndex,
-                                scheme: scheme,
                               ),
                       ),
                   ],
@@ -680,76 +685,68 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
     required bool isTotal,
     required bool isPreneur,
     required bool isAppele,
-    required ColorScheme scheme,
   }) {
     return Container(
       height: 40,
       decoration: isPreneur
           ? BoxDecoration(
-              color: scheme.primary.withAlpha(30),
-              border: Border(
-                bottom: BorderSide(color: scheme.primary, width: 2),
+              color: AppTheme.gold.withValues(alpha: 0.1),
+              border: const Border(
+                left: BorderSide(color: AppTheme.gold, width: 3),
               ),
             )
           : isAppele
               ? BoxDecoration(
-                  color: scheme.tertiary.withAlpha(20),
-                  border: Border(
-                    bottom: BorderSide(color: scheme.tertiary, width: 1.5),
+                  color: AppTheme.appele.withValues(alpha: 0.08),
+                  border: const Border(
+                    left: BorderSide(color: AppTheme.appele, width: 3),
                   ),
                 )
               : null,
       child: Center(
-        child: _buildScoreCell(score, isTotal: isTotal, scheme: scheme),
+        child: _buildScoreCell(score, isTotal: isTotal),
       ),
     );
   }
 
-  Widget _buildMortCell(ColorScheme scheme) {
+  Widget _buildMortCell() {
     return Container(
       height: 40,
-      color: Colors.grey.shade100,
-      child: Center(
+      color: AppTheme.mort.withValues(alpha: 0.1),
+      child: const Center(
         child: Text(
           '—',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Colors.grey.shade400,
+            color: AppTheme.mort,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildScoreCell(int score,
-      {required bool isTotal, required ColorScheme scheme}) {
-    Color textColor;
-    if (score > 0) {
-      textColor = Colors.green.shade700;
-    } else if (score < 0) {
-      textColor = Colors.red.shade700;
-    } else {
-      textColor = scheme.onSurface;
-    }
+  Widget _buildScoreCell(int score, {required bool isTotal}) {
     return Text(
       score == 0 ? '0' : '${score > 0 ? "+" : ""}$score',
       style: TextStyle(
         fontSize: isTotal ? 14 : 12,
         fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-        color: textColor,
+        fontFeatures: const [FontFeature.tabularFigures()],
+        color: AppTheme.scoreColor(score),
       ),
     );
   }
 
-  Widget _buildHistorique(ColorScheme scheme) {
+  Widget _buildHistorique() {
     if (_session.donnes.isEmpty) {
       return Center(
         child: Text(
           'Aucune donne enregistrée',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+          style: AppTheme.bodyFont(
+            fontSize: 16,
+            color: AppTheme.textSecondary,
+          ),
         ),
       );
     }
@@ -778,13 +775,13 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
+                        color: AppTheme.primaryDark,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         '#${donne.numero}',
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 12),
+                            fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.gold),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -807,8 +804,8 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: donne.estFait
-                            ? Colors.green.shade100
-                            : Colors.red.shade100,
+                            ? AppTheme.success.withValues(alpha: 0.2)
+                            : AppTheme.error.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -817,8 +814,8 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: donne.estFait
-                              ? Colors.green.shade800
-                              : Colors.red.shade800,
+                              ? AppTheme.success
+                              : AppTheme.error,
                         ),
                       ),
                     ),
@@ -838,9 +835,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                       '${scoreDuPreneur > 0 ? "+" : ""}$scoreDuPreneur',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: scoreDuPreneur > 0
-                            ? Colors.green.shade700
-                            : Colors.red.shade700,
+                        color: AppTheme.scoreColor(scoreDuPreneur),
                       ),
                     ),
                   ],
@@ -850,28 +845,28 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                   padding: const EdgeInsets.only(top: 4),
                   child: Row(
                     children: [
-                      Icon(Icons.front_hand, size: 12, color: scheme.onSurfaceVariant),
+                      const Icon(Icons.front_hand, size: 12, color: AppTheme.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         _session.joueurs[donne.donneurIndex].name,
-                        style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                        style: AppTheme.bodyFont(fontSize: 11, color: AppTheme.textSecondary),
                       ),
                       if (donne.mortIndex != null) ...[
                         const SizedBox(width: 10),
-                        Icon(Icons.pause_circle, size: 12, color: Colors.grey.shade500),
+                        const Icon(Icons.pause_circle, size: 12, color: AppTheme.mort),
                         const SizedBox(width: 3),
                         Text(
                           'Mort : ${_session.joueurs[donne.mortIndex!].name}',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          style: AppTheme.bodyFont(fontSize: 11, color: AppTheme.mort),
                         ),
                       ],
                       if (donne.appeleIndex != null && donne.appeleIndex != donne.preneurIndex) ...[
                         const SizedBox(width: 10),
-                        Icon(Icons.people, size: 12, color: scheme.onSurfaceVariant),
+                        const Icon(Icons.people, size: 12, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Text(
                           'Appelé : ${_session.joueurs[donne.appeleIndex!].name}',
-                          style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                          style: AppTheme.bodyFont(fontSize: 11, color: AppTheme.textSecondary),
                         ),
                       ],
                       if (donne.roiAppele != null) ...[
@@ -921,12 +916,12 @@ class _PrimeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.amber.shade100,
+        color: AppTheme.gold.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 10, color: Colors.amber.shade900),
+        style: const TextStyle(fontSize: 10, color: AppTheme.gold),
       ),
     );
   }
@@ -964,7 +959,6 @@ class _FinDeSessionSheetState extends State<_FinDeSessionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -978,28 +972,22 @@ class _FinDeSessionSheetState extends State<_FinDeSessionSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
             // Barre de drag
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: scheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            AppTheme.bottomSheetHandle(),
             const SizedBox(height: 16),
             // Titre
             const Text('🏆', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 8),
             Text(
               'Session terminée !',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: AppTheme.titleFont(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 20),
             // Classement final
             for (var i = 0; i < widget.classement.length; i++)
-              _buildRankRow(i, widget.classement[i], scheme),
+              _buildRankRow(i, widget.classement[i]),
             const SizedBox(height: 24),
             // Actions
             if (_showProlongerInput) ...[
@@ -1062,8 +1050,7 @@ class _FinDeSessionSheetState extends State<_FinDeSessionSheet> {
     );
   }
 
-  Widget _buildRankRow(
-      int rank, MapEntry<int, int> entry, ColorScheme scheme) {
+  Widget _buildRankRow(int rank, MapEntry<int, int> entry) {
     final joueur = widget.joueurs[entry.key];
     final score = entry.value;
     final medal = rank == 0
@@ -1093,6 +1080,7 @@ class _FinDeSessionSheetState extends State<_FinDeSessionSheet> {
               style: TextStyle(
                 fontWeight: rank == 0 ? FontWeight.bold : FontWeight.normal,
                 fontSize: rank == 0 ? 16 : 14,
+                color: rank == 0 ? AppTheme.gold : AppTheme.textPrimary,
               ),
             ),
           ),
@@ -1101,11 +1089,8 @@ class _FinDeSessionSheetState extends State<_FinDeSessionSheet> {
             style: TextStyle(
               fontSize: rank == 0 ? 20 : 16,
               fontWeight: FontWeight.bold,
-              color: score > 0
-                  ? Colors.green.shade700
-                  : score < 0
-                      ? Colors.red.shade700
-                      : scheme.onSurface,
+              fontFeatures: const [FontFeature.tabularFigures()],
+              color: AppTheme.scoreColor(score),
             ),
           ),
         ],

@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dart analyze:*)"
+      "Bash(dart analyze:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter --version)",
+      "Bash(where flutter:*)",
+      "Bash(where dart:*)",
+      "Read(//c/flutter/bin/**)",
+      "Read(//c/src/flutter/bin/**)",
+      "Read(//c/Users/tgren/**)",
+      "Bash(where py:*)",
+      "Bash(where python3:*)",
+      "Bash(where python:*)",
+      "Bash(py -3 --version)"
     ]
   }
 }

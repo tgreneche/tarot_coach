@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../models/card.dart';
 import '../models/game.dart';
 import '../engine/hand_evaluator.dart';
@@ -133,10 +134,10 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
+        color: AppTheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
+            color: AppTheme.textSecondary.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -199,7 +200,6 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final isReady = _selectedIds.length == _expectedCards;
 
     return Scaffold(
@@ -212,7 +212,7 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
           isScrollable: false,
           tabs: const [
             Tab(
-              icon: Text('★', style: TextStyle(fontSize: 22)),
+              icon: Text('★', style: TextStyle(fontSize: 22, color: AppTheme.gold)),
             ),
             Tab(
               icon: Text('♥', style: TextStyle(fontSize: 22, color: Colors.red)),
