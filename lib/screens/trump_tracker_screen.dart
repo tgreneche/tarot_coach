@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../engine/trump_tracker.dart';
 
 /// Écran de suivi des atouts joués pendant la partie.
@@ -48,8 +49,6 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Suivi des atouts'),
@@ -67,21 +66,23 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            color: scheme.primaryContainer,
+            color: AppTheme.surface,
             child: Column(
               children: [
                 Text(
                   '${_tracker.remainingCount}',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: scheme.onPrimaryContainer,
-                      ),
+                  style: AppTheme.titleFont(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.gold,
+                  ),
                 ),
                 Text(
                   'atouts restants en jeu',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: scheme.onPrimaryContainer,
-                      ),
+                  style: AppTheme.bodyFont(
+                    fontSize: 16,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 // Indicateurs Petit / 21
@@ -113,9 +114,10 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'Tapez sur un atout quand il tombe',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: AppTheme.bodyFont(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -183,10 +185,10 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
                             const SizedBox(height: 8),
                             Text(
                               'Tombés : ${_tracker.playedRanks.join(', ')}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                              style: AppTheme.bodyFont(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                              ),
                             ),
                           ],
                           if (_tracker.remainingCount > 0 &&
@@ -194,13 +196,11 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
                             const SizedBox(height: 8),
                             Text(
                               '⚠️ Encore en jeu : ${_tracker.remainingRanks.join(', ')}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: scheme.error,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              style: AppTheme.bodyFont(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.error,
+                              ),
                             ),
                           ],
                         ],
@@ -235,19 +235,21 @@ class _TrumpTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     Color bgColor;
     Color textColor;
+    Color borderColor;
     if (isPlayed) {
-      bgColor = scheme.surfaceContainerHighest.withValues(alpha: 0.5);
-      textColor = scheme.onSurface.withValues(alpha: 0.3);
+      bgColor = AppTheme.mort.withValues(alpha: 0.1);
+      textColor = AppTheme.mort.withValues(alpha: 0.4);
+      borderColor = AppTheme.mort.withValues(alpha: 0.2);
     } else if (isBout) {
-      bgColor = Colors.orange.shade100;
-      textColor = Colors.orange.shade900;
+      bgColor = AppTheme.gold.withValues(alpha: 0.15);
+      textColor = AppTheme.gold;
+      borderColor = AppTheme.gold.withValues(alpha: 0.4);
     } else {
-      bgColor = Colors.green.shade50;
-      textColor = Colors.green.shade900;
+      bgColor = AppTheme.surface;
+      textColor = AppTheme.textPrimary;
+      borderColor = AppTheme.textSecondary.withValues(alpha: 0.3);
     }
 
     return Material(
@@ -260,13 +262,7 @@ class _TrumpTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isPlayed
-                  ? scheme.outlineVariant.withValues(alpha: 0.3)
-                  : isBout
-                      ? Colors.orange.shade300
-                      : scheme.outlineVariant,
-            ),
+            border: Border.all(color: borderColor),
           ),
           child: Center(
             child: Text(
@@ -294,25 +290,38 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isAlive ? Colors.green.shade900 : Colors.red.shade900,
-          fontWeight: FontWeight.w600,
-          fontSize: 13,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isAlive
+            ? AppTheme.success.withValues(alpha: 0.15)
+            : AppTheme.error.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isAlive
+              ? AppTheme.success.withValues(alpha: 0.4)
+              : AppTheme.error.withValues(alpha: 0.4),
         ),
       ),
-      avatar: Icon(
-        isAlive ? Icons.check_circle : Icons.cancel,
-        size: 18,
-        color: isAlive ? Colors.green.shade700 : Colors.red.shade700,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isAlive ? Icons.check_circle : Icons.cancel,
+            size: 16,
+            color: isAlive ? AppTheme.success : AppTheme.error,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isAlive ? AppTheme.success : AppTheme.error,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
       ),
-      backgroundColor: isAlive ? Colors.green.shade50 : Colors.red.shade50,
-      side: BorderSide(
-        color: isAlive ? Colors.green.shade200 : Colors.red.shade200,
-      ),
-      visualDensity: VisualDensity.compact,
     );
   }
 }

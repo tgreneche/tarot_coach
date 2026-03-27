@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../models/game.dart';
 import 'card_selection_screen.dart';
 
@@ -9,8 +10,6 @@ class PlayerCountScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Type de partie')),
       body: SafeArea(
@@ -20,26 +19,28 @@ class PlayerCountScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 24),
-              Icon(
+              const Icon(
                 Icons.people,
                 size: 64,
-                color: scheme.primary,
+                color: AppTheme.gold,
               ),
               const SizedBox(height: 16),
               Text(
                 'Combien de joueurs ?',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: AppTheme.titleFont(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Le nombre de cartes par joueur dépend du nombre de joueurs',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: AppTheme.bodyFont(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               const SizedBox(height: 40),
               for (final pc in PlayerCount.values) ...[
@@ -61,7 +62,6 @@ class _PlayerCountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final label = '${playerCount.count} joueurs';
     final subtitle =
         '${playerCount.cardsPerPlayer} cartes / joueur — Chien de ${playerCount.chienSize}';
@@ -85,16 +85,17 @@ class _PlayerCountCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: scheme.primaryContainer,
+                  color: AppTheme.gold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
                     '${playerCount.count}J',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: scheme.onPrimaryContainer,
-                        ),
+                    style: AppTheme.titleFont(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.gold,
+                    ),
                   ),
                 ),
               ),
@@ -105,23 +106,25 @@ class _PlayerCountCard extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right,
-                color: scheme.onSurfaceVariant,
+                color: AppTheme.textSecondary,
               ),
             ],
           ),

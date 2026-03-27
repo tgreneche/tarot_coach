@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../models/session.dart';
 import '../services/storage_service.dart';
 import 'player_count_screen.dart';
@@ -61,8 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -77,31 +76,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: scheme.primaryContainer,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.surface,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.style,
                         size: 48,
-                        color: scheme.onPrimaryContainer,
+                        color: AppTheme.gold,
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'TarotCoach',
-                      style:
-                          Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: scheme.primary,
-                              ),
+                      style: AppTheme.titleFont(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Votre assistant de Tarot français',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 15,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -120,9 +120,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? '${_sessionEnCours!.nbDonnesJouees} donne(s) — '
                         '${_sessionEnCours!.joueurs.map((j) => j.name).join(", ")}'
                     : 'Lancer une session de Tarot entre amis avec scoring automatique',
-                color: _sessionEnCours != null
-                    ? Colors.orange.shade800
-                    : scheme.primary,
+                iconColor: _sessionEnCours != null
+                    ? AppTheme.gold
+                    : AppTheme.success,
+                highlighted: _sessionEnCours != null,
                 onTap: _naviguerSession,
               ),
               const SizedBox(height: 12),
@@ -130,9 +131,11 @@ class _HomeScreenState extends State<HomeScreen> {
               // === OUTILS ===
               Text(
                 'Outils',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: AppTheme.bodyFont(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               const SizedBox(height: 8),
               _FeatureCard(
@@ -140,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Analyser ma main',
                 subtitle:
                     'Sélectionnez vos cartes et obtenez une recommandation',
-                color: scheme.primary,
+                iconColor: AppTheme.gold,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -153,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.visibility,
                 title: 'Suivi des atouts',
                 subtitle: 'Comptez les atouts tombés pendant la partie',
-                color: scheme.tertiary,
+                iconColor: AppTheme.appele,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -166,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icons.menu_book,
                 title: 'Règles du Tarot',
                 subtitle: 'Règles officielles FFT en PDF',
-                color: Colors.brown.shade600,
+                iconColor: AppTheme.goldDark,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -179,9 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
               // === GESTION ===
               Text(
                 'Gestion',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: AppTheme.bodyFont(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -239,20 +244,28 @@ class _FeatureCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  final Color color;
+  final Color iconColor;
+  final bool highlighted;
   final VoidCallback onTap;
 
   const _FeatureCard({
     required this.icon,
     required this.title,
     required this.subtitle,
-    required this.color,
+    required this.iconColor,
+    this.highlighted = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      shape: highlighted
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3)),
+            )
+          : null,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -263,10 +276,10 @@ class _FeatureCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
+                  color: iconColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 28),
+                child: Icon(icon, color: iconColor, size: 28),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -275,24 +288,26 @@ class _FeatureCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                      style: AppTheme.bodyFont(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Icon(
+              const Icon(
                 Icons.chevron_right,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: AppTheme.textSecondary,
               ),
             ],
           ),
@@ -315,7 +330,6 @@ class _SmallFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -325,12 +339,16 @@ class _SmallFeatureCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: scheme.primary, size: 22),
+              Icon(icon, color: AppTheme.gold, size: 22),
               const SizedBox(width: 8),
-              Text(title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      )),
+              Text(
+                title,
+                style: AppTheme.bodyFont(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ],
           ),
         ),

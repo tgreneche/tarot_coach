@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 /// Écran À propos.
 class AboutScreen extends StatelessWidget {
@@ -6,8 +7,6 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(title: const Text('À propos')),
       body: SingleChildScrollView(
@@ -18,27 +17,29 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: scheme.primaryContainer,
+              decoration: const BoxDecoration(
+                color: AppTheme.surface,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.style, size: 48,
-                  color: scheme.onPrimaryContainer),
+              child: const Icon(Icons.style, size: 48,
+                  color: AppTheme.gold),
             ),
             const SizedBox(height: 16),
             Text(
               'CoachTarot',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: scheme.primary,
-                  ),
+              style: AppTheme.titleFont(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.gold,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               'Version 1.0.0',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: AppTheme.bodyFont(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -46,9 +47,10 @@ class AboutScreen extends StatelessWidget {
               'Conçu par et pour des passionnés, avec le vocabulaire '
               'officiel de la Fédération Française de Tarot.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: AppTheme.bodyFont(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: 24),
             Card(
@@ -131,16 +133,18 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 32),
             Text(
               'Développé avec ❤️ pour les joueurs de tarot',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: AppTheme.bodyFont(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               '© 2026 CoachTarot',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: AppTheme.bodyFont(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+              ),
             ),
             const SizedBox(height: 20),
           ],
@@ -161,10 +165,10 @@ class _FeatureBullet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 6, right: 8),
+          const Padding(
+            padding: EdgeInsets.only(top: 6, right: 8),
             child: Icon(Icons.check_circle, size: 14,
-                color: Theme.of(context).colorScheme.primary),
+                color: AppTheme.gold),
           ),
           Expanded(
             child: Text(text,

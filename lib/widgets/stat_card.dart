@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 /// Widget carte de statistique — compact pour éviter l'overflow.
 class StatCard extends StatelessWidget {
@@ -19,8 +20,7 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final cardColor = color ?? scheme.primary;
+    final cardColor = color ?? AppTheme.gold;
 
     return Card(
       child: Padding(
@@ -36,9 +36,10 @@ class StatCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                    style: AppTheme.bodyFont(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -50,19 +51,21 @@ class StatCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 value,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: cardColor,
-                    ),
+                style: AppTheme.titleFont(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: cardColor,
+                ),
               ),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 2),
               Text(
                 subtitle!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: AppTheme.bodyFont(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),

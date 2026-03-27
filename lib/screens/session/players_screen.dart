@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../theme/app_theme.dart';
 import '../../models/player.dart';
 import '../../services/storage_service.dart';
 
@@ -181,7 +182,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(ctx).colorScheme.error),
+                backgroundColor: AppTheme.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -205,7 +206,6 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final selOk = widget.selectionMode &&
         widget.nbJoueursRequis != null &&
         _selectedIds.length == widget.nbJoueursRequis;
@@ -237,21 +237,23 @@ class _PlayersScreenState extends State<PlayersScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.people_outline,
-                      size: 64, color: scheme.onSurfaceVariant),
+                  const Icon(Icons.people_outline,
+                      size: 64, color: AppTheme.textSecondary),
                   const SizedBox(height: 16),
                   Text(
                     'Aucun joueur dans le carnet',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                    style: AppTheme.bodyFont(
+                      fontSize: 16,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Ajoutez des joueurs pour commencer',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                    style: AppTheme.bodyFont(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -265,8 +267,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 final isSelected = _selectedIds.contains(player.id);
 
                 return Card(
-                  color: isSelected
-                      ? scheme.primaryContainer
+                  shape: isSelected
+                      ? RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.5)),
+                        )
                       : null,
                   child: ListTile(
                     leading: CircleAvatar(
@@ -283,6 +288,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                       style: TextStyle(
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? AppTheme.gold : AppTheme.textPrimary,
                       ),
                     ),
                     trailing: widget.selectionMode
