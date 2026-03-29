@@ -6,7 +6,7 @@ import '../../services/storage_service.dart';
 import 'players_screen.dart';
 import 'session_board_screen.dart';
 
-/// Écran de création d'une nouvelle session de Tarot.
+/// \u00c9cran de cr\u00e9ation d'une nouvelle session de Tarot.
 class NewSessionScreen extends StatefulWidget {
   const NewSessionScreen({super.key});
 
@@ -22,6 +22,7 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
     final suggestions = SuggestionsDonnes.pourJoueurs(_nbJoueurs);
     final canStart =
         _selectedPlayers.length == _nbJoueurs &&
@@ -70,13 +71,13 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                         switch (_nbJoueurs) {
                           3 => '3 joueurs',
                           4 => '4 joueurs',
-                          5 => '5 joueurs — avec appel au Roi',
-                          6 => '6 joueurs — avec un mort par donne',
+                          5 => '5 joueurs \u2014 avec appel au Roi',
+                          6 => '6 joueurs \u2014 avec un mort par donne',
                           _ => '',
                         },
-                        style: AppTheme.bodyFont(
+                        style: t.bodyFont(
                           fontSize: 13,
-                          color: AppTheme.textSecondary,
+                          color: t.textSecondary,
                         ),
                       ),
                     ),
@@ -86,7 +87,7 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
             ),
             const SizedBox(height: 12),
 
-            // === Sélection des joueurs ===
+            // === S\u00e9lection des joueurs ===
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -140,31 +141,31 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                             title: Text(p.name),
                             subtitle:
                                 i == 0 ? Text('Premier donneur',
-                                    style: AppTheme.bodyFont(
+                                    style: t.bodyFont(
                                       fontSize: 12,
-                                      color: AppTheme.gold,
+                                      color: t.gold,
                                     )) : null,
-                            trailing: const Icon(Icons.drag_handle,
-                                color: AppTheme.textSecondary),
+                            trailing: Icon(Icons.drag_handle,
+                                color: t.textSecondary),
                           );
                         },
                       ),
                       Text(
                         'Glissez pour changer l\'ordre autour de la table.\n'
                         'Le premier sera le premier donneur.',
-                        style: AppTheme.bodyFont(
+                        style: t.bodyFont(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: t.textSecondary,
                         ),
                       ),
                     ] else
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
-                          'Sélectionnez $_nbJoueurs joueurs depuis le carnet',
-                          style: AppTheme.bodyFont(
+                          'S\u00e9lectionnez $_nbJoueurs joueurs depuis le carnet',
+                          style: t.bodyFont(
                             fontSize: 14,
-                            color: AppTheme.textSecondary,
+                            color: t.textSecondary,
                           ),
                         ),
                       ),
@@ -193,7 +194,7 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                         ),
                         ButtonSegment(
                           value: SessionMode.donnesFixees,
-                          label: Text('Donnes fixées'),
+                          label: Text('Donnes fix\u00e9es'),
                           icon: Icon(Icons.pin, size: 18),
                         ),
                       ],
@@ -225,10 +226,10 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Multiples de $_nbJoueurs pour que chacun donne '
-                        'le même nombre de fois.',
-                        style: AppTheme.bodyFont(
+                        'le m\u00eame nombre de fois.',
+                        style: t.bodyFont(
                           fontSize: 12,
-                          color: AppTheme.textSecondary,
+                          color: t.textSecondary,
                         ),
                       ),
                     ],
@@ -279,7 +280,7 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
     await StorageService.instance.createSession(session);
 
     if (mounted) {
-      // Remplace l'écran pour aller directement au tableau de scores
+      // Remplace l'\u00e9cran pour aller directement au tableau de scores
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -290,7 +291,7 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
   }
 }
 
-/// Pastille circulaire pour la sélection du nombre de joueurs.
+/// Pastille circulaire pour la s\u00e9lection du nombre de joueurs.
 class _PlayerCountChip extends StatelessWidget {
   final int value;
   final bool selected;
@@ -304,6 +305,8 @@ class _PlayerCountChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -311,10 +314,10 @@ class _PlayerCountChip extends StatelessWidget {
         width: 52,
         height: 52,
         decoration: BoxDecoration(
-          color: selected ? AppTheme.gold : AppTheme.surface,
+          color: selected ? t.gold : t.surface,
           shape: BoxShape.circle,
           border: Border.all(
-            color: selected ? AppTheme.gold : AppTheme.textSecondary.withValues(alpha: 0.3),
+            color: selected ? t.gold : t.textSecondary.withValues(alpha: 0.3),
             width: selected ? 2 : 1,
           ),
         ),
@@ -324,7 +327,7 @@ class _PlayerCountChip extends StatelessWidget {
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: selected ? AppTheme.primaryDark : AppTheme.textSecondary,
+            color: selected ? t.primaryDark : t.textSecondary,
           ),
         ),
       ),

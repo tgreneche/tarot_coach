@@ -1,14 +1,37 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_provider.dart';
+import '../main.dart' show themeProvider;
 
 /// Écran À propos.
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
 
   @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  @override
+  void initState() {
+    super.initState();
+    themeProvider.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    themeProvider.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('À propos')),
+      appBar: AppBar(title: const Text('A propos')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -17,39 +40,39 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: AppTheme.surface,
+              decoration: BoxDecoration(
+                color: t.surface,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.style, size: 48,
-                  color: AppTheme.gold),
+              child: Icon(Icons.style, size: 48,
+                  color: t.gold),
             ),
             const SizedBox(height: 16),
             Text(
               'CoachTarot',
-              style: AppTheme.titleFont(
+              style: t.titleFont(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.gold,
+                color: t.gold,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               'Version 1.0.0',
-              style: AppTheme.bodyFont(
+              style: t.bodyFont(
                 fontSize: 14,
-                color: AppTheme.textSecondary,
+                color: t.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Ton compagnon de scoring pour le Tarot français.\n'
-              'Conçu par et pour des passionnés, avec le vocabulaire '
-              'officiel de la Fédération Française de Tarot.',
+              'Ton compagnon de scoring pour le Tarot fran\u00e7ais.\n'
+              'Con\u00e7u par et pour des passionn\u00e9s, avec le vocabulaire '
+              'officiel de la F\u00e9d\u00e9ration Fran\u00e7aise de Tarot.',
               textAlign: TextAlign.center,
-              style: AppTheme.bodyFont(
+              style: t.bodyFont(
                 fontSize: 14,
-                color: AppTheme.textSecondary,
+                color: t.textSecondary,
               ),
             ),
             const SizedBox(height: 24),
@@ -60,24 +83,24 @@ class AboutScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Fonctionnalités',
+                      'Fonctionnalit\u00e9s',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(height: 12),
-                    _FeatureBullet('Scoring complet de 3 à 6 joueurs (avec gestion du mort à 6)'),
-                    _FeatureBullet('Appel au Roi automatique au tarot à 5 et 6'),
-                    _FeatureBullet('Calcul automatique des scores (contrats, primes, poignées, petit au bout, chelem)'),
-                    _FeatureBullet('Sessions libres ou en nombre de donnes fixé'),
-                    _FeatureBullet('Vue synthétique et détaillée du classement'),
+                    _FeatureBullet('Scoring complet de 3 \u00e0 6 joueurs (avec gestion du mort \u00e0 6)'),
+                    _FeatureBullet('Appel au Roi automatique au tarot \u00e0 5 et 6'),
+                    _FeatureBullet('Calcul automatique des scores (contrats, primes, poign\u00e9es, petit au bout, chelem)'),
+                    _FeatureBullet('Sessions libres ou en nombre de donnes fix\u00e9'),
+                    _FeatureBullet('Vue synth\u00e9tique et d\u00e9taill\u00e9e du classement'),
                     _FeatureBullet('Historique des donnes et des sessions'),
                     _FeatureBullet('Pause et reprise de session'),
-                    _FeatureBullet('Aide-mémoire en session (valeur des cartes, points par bouts)'),
-                    _FeatureBullet('Règles officielles FFT consultables hors connexion'),
+                    _FeatureBullet('Aide-m\u00e9moire en session (valeur des cartes, points par bouts)'),
+                    _FeatureBullet('R\u00e8gles officielles FFT consultables hors connexion'),
                     _FeatureBullet('Rotation automatique du donneur'),
                     _FeatureBullet('Analyse de main et recommandation de contrat'),
-                    _FeatureBullet('Suivi des atouts joués en temps réel'),
+                    _FeatureBullet('Suivi des atouts jou\u00e9s en temps r\u00e9el'),
                   ],
                 ),
               ),
@@ -90,17 +113,17 @@ class AboutScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Règles utilisées',
+                      'R\u00e8gles utilis\u00e9es',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'CoachTarot suit les règles officielles de la '
-                      'Fédération Française de Tarot (FFT). '
+                      'CoachTarot suit les r\u00e8gles officielles de la '
+                      'F\u00e9d\u00e9ration Fran\u00e7aise de Tarot (FFT). '
                       'Le calcul des scores et les recommandations de contrat '
-                      'sont basés sur ces règles.',
+                      'sont bas\u00e9s sur ces r\u00e8gles.',
                     ),
                   ],
                 ),
@@ -114,39 +137,169 @@ class AboutScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Confidentialité',
+                      'Confidentialit\u00e9',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'CoachTarot fonctionne entièrement hors-ligne. '
-                      'Aucune donnée personnelle n\'est collectée, stockée '
-                      'ou transmise. Toutes les données sont stockées '
+                      'CoachTarot fonctionne enti\u00e8rement hors-ligne. '
+                      'Aucune donn\u00e9e personnelle n\'est collect\u00e9e, stock\u00e9e '
+                      'ou transmise. Toutes les donn\u00e9es sont stock\u00e9es '
                       'localement sur votre appareil.',
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: 16),
+
+            // === Sélecteur de thème ===
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Apparence',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    _ThemeOption(
+                      themeId: AppThemeId.tapisVert,
+                      label: 'Tapis Vert',
+                      subtitle: '(par défaut)',
+                      previewColor: const Color(0xFF1B5E20),
+                      accentColor: const Color(0xFFD4A843),
+                      isSelected: themeProvider.currentThemeId == AppThemeId.tapisVert,
+                      onTap: () => themeProvider.setTheme(AppThemeId.tapisVert),
+                    ),
+                    const SizedBox(height: 8),
+                    _ThemeOption(
+                      themeId: AppThemeId.classique,
+                      label: 'Classique',
+                      subtitle: '(suit le mode du téléphone)',
+                      previewColor: const Color(0xFFF5F5F5),
+                      accentColor: const Color(0xFF1976D2),
+                      isSelected: themeProvider.currentThemeId == AppThemeId.classique,
+                      onTap: () => themeProvider.setTheme(AppThemeId.classique),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: 32),
             Text(
-              'Développé avec ❤️ pour les joueurs de tarot',
-              style: AppTheme.bodyFont(
+              'Développé avec \u2764\ufe0f pour les joueurs de tarot',
+              style: t.bodyFont(
                 fontSize: 13,
-                color: AppTheme.textSecondary,
+                color: t.textSecondary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '© 2026 CoachTarot',
-              style: AppTheme.bodyFont(
+              '\u00a9 2026 CoachTarot',
+              style: t.bodyFont(
                 fontSize: 13,
-                color: AppTheme.textSecondary,
+                color: t.textSecondary,
               ),
             ),
             const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeOption extends StatelessWidget {
+  final AppThemeId themeId;
+  final String label;
+  final String subtitle;
+  final Color previewColor;
+  final Color accentColor;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ThemeOption({
+    required this.themeId,
+    required this.label,
+    required this.subtitle,
+    required this.previewColor,
+    required this.accentColor,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected ? t.gold : t.textSecondary.withValues(alpha: 0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Aperçu visuel
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: previewColor,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: t.textSecondary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Center(
+                child: Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: t.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: t.bodyFont(
+                      fontSize: 12,
+                      color: t.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle, color: t.gold, size: 22),
           ],
         ),
       ),
@@ -160,15 +313,17 @@ class _FeatureBullet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 6, right: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 6, right: 8),
             child: Icon(Icons.check_circle, size: 14,
-                color: AppTheme.gold),
+                color: t.gold),
           ),
           Expanded(
             child: Text(text,

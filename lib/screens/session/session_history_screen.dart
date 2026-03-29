@@ -4,7 +4,7 @@ import '../../models/session.dart';
 import '../../services/storage_service.dart';
 import 'session_recap_screen.dart';
 
-/// Historique des sessions clôturées (20 dernières).
+/// Historique des sessions cl\u00f4tur\u00e9es (20 derni\u00e8res).
 class SessionHistoryScreen extends StatefulWidget {
   const SessionHistoryScreen({super.key});
 
@@ -27,15 +27,16 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
     final y = dt.year;
     final h = dt.hour.toString().padLeft(2, '0');
     final min = dt.minute.toString().padLeft(2, '0');
-    return '$d/$m/$y à $h:$min';
+    return '$d/$m/$y \u00e0 $h:$min';
   }
 
   void _confirmDeleteSession(Session session) async {
+    final t = AppTheme.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Supprimer cette session ?'),
-        content: const Text('Cette action est irréversible.'),
+        content: const Text('Cette action est irr\u00e9versible.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -44,7 +45,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.error,
+              backgroundColor: t.error,
             ),
             child: const Text('Supprimer'),
           ),
@@ -60,12 +61,13 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
   }
 
   void _confirmDeleteAll() async {
+    final t = AppTheme.of(context);
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Supprimer tout l\'historique ?'),
         content: Text(
-          'Les ${_sessions.length} sessions seront supprimées définitivement.',
+          'Les ${_sessions.length} sessions seront supprim\u00e9es d\u00e9finitivement.',
         ),
         actions: [
           TextButton(
@@ -75,7 +77,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: AppTheme.error,
+              backgroundColor: t.error,
             ),
             child: const Text('Tout supprimer'),
           ),
@@ -90,6 +92,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historique des sessions'),
@@ -107,14 +111,14 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.history,
-                      size: 64, color: AppTheme.textSecondary),
+                  Icon(Icons.history,
+                      size: 64, color: t.textSecondary),
                   const SizedBox(height: 16),
                   Text(
-                    'Aucune session terminée',
-                    style: AppTheme.bodyFont(
+                    'Aucune session termin\u00e9e',
+                    style: t.bodyFont(
                       fontSize: 16,
-                      color: AppTheme.textSecondary,
+                      color: t.textSecondary,
                     ),
                   ),
                 ],
@@ -148,14 +152,14 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.calendar_today,
-                                  size: 14, color: AppTheme.gold),
+                              Icon(Icons.calendar_today,
+                                  size: 14, color: t.gold),
                               const SizedBox(width: 6),
                               Text(
                                 _formatDate(session.dateCreation),
-                                style: AppTheme.bodyFont(
+                                style: t.bodyFont(
                                   fontSize: 12,
-                                  color: AppTheme.gold,
+                                  color: t.gold,
                                 ),
                               ),
                               const Spacer(),
@@ -163,12 +167,12 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryDark,
+                                  color: t.primaryDark,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  '${session.nbJoueurs}J — ${session.nbDonnesJouees} donnes',
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                                  '${session.nbJoueurs}J \u2014 ${session.nbDonnesJouees} donnes',
+                                  style: TextStyle(fontSize: 11, color: t.textSecondary),
                                 ),
                               ),
                             ],
@@ -197,15 +201,15 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                const Text('🏆',
+                                const Text('\ud83c\udfc6',
                                     style: TextStyle(fontSize: 16)),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '${vainqueur.name} — '
+                                  '${vainqueur.name} \u2014 '
                                   '+${classement.first.value}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.success,
+                                    color: t.success,
                                   ),
                                 ),
                               ],

@@ -3,7 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../models/session.dart';
 import '../../models/donne.dart';
 
-/// Écran récapitulatif de fin de session — classement + stats fun.
+/// \u00c9cran r\u00e9capitulatif de fin de session -- classement + stats fun.
 class SessionRecapScreen extends StatelessWidget {
   final Session session;
 
@@ -11,12 +11,13 @@ class SessionRecapScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
     final classement = session.classement;
     final prises = session.prisesParJoueur;
     final taux = session.tauxReussiteParJoueur;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Récapitulatif')),
+      appBar: AppBar(title: const Text('R\u00e9capitulatif')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -26,26 +27,26 @@ class SessionRecapScreen extends StatelessWidget {
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
-                side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3)),
+                side: BorderSide(color: t.gold.withValues(alpha: 0.3)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    const Text('🏆', style: TextStyle(fontSize: 48)),
+                    const Text('\ud83c\udfc6', style: TextStyle(fontSize: 48)),
                     const SizedBox(height: 8),
                     Text(
                       'Classement final',
-                      style: AppTheme.titleFont(
+                      style: t.titleFont(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Text(
-                      '${session.nbDonnesJouees} donnes jouées',
-                      style: AppTheme.bodyFont(
+                      '${session.nbDonnesJouees} donnes jou\u00e9es',
+                      style: t.bodyFont(
                         fontSize: 14,
-                        color: AppTheme.textSecondary,
+                        color: t.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -79,7 +80,7 @@ class SessionRecapScreen extends StatelessWidget {
                         taux[i] ?? 0,
                       ),
                       if (i < session.nbJoueurs - 1)
-                        Divider(color: AppTheme.textSecondary.withValues(alpha: 0.2)),
+                        Divider(color: t.textSecondary.withValues(alpha: 0.2)),
                     ],
                   ],
                 ),
@@ -102,35 +103,35 @@ class SessionRecapScreen extends StatelessWidget {
                     const SizedBox(height: 12),
                     _StatRow(
                       icon: Icons.arrow_upward,
-                      color: AppTheme.success,
+                      color: t.success,
                       label: 'Meilleur score sur une donne',
                       value: session.meilleurePerformance != null
                           ? '+${session.meilleurePerformance!.value}'
-                          : '—',
+                          : '\u2014',
                     ),
                     _StatRow(
                       icon: Icons.arrow_downward,
-                      color: AppTheme.error,
+                      color: t.error,
                       label: 'Pire score sur une donne',
                       value: session.pirePerformance != null
                           ? '${session.pirePerformance!.value}'
-                          : '—',
+                          : '\u2014',
                     ),
                     _StatRow(
                       icon: Icons.shield,
-                      color: AppTheme.gold,
-                      label: 'Gardes Sans tentées',
+                      color: t.gold,
+                      label: 'Gardes Sans tent\u00e9es',
                       value: '${session.nbGardesSans}',
                     ),
                     _StatRow(
                       icon: Icons.local_fire_department,
-                      color: AppTheme.error,
-                      label: 'Gardes Contre tentées',
+                      color: t.error,
+                      label: 'Gardes Contre tent\u00e9es',
                       value: '${session.nbGardesContre}',
                     ),
                     _StatRow(
                       icon: Icons.emoji_events,
-                      color: AppTheme.appele,
+                      color: t.appele,
                       label: 'Chelems',
                       value: '${session.nbChelems}',
                     ),
@@ -145,7 +146,7 @@ class SessionRecapScreen extends StatelessWidget {
               onPressed: () => Navigator.popUntil(
                   context, (route) => route.isFirst),
               icon: const Icon(Icons.home),
-              label: const Text('Retour à l\'accueil'),
+              label: const Text('Retour \u00e0 l\'accueil'),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -159,14 +160,15 @@ class SessionRecapScreen extends StatelessWidget {
 
   Widget _buildRankRow(
       BuildContext context, int rank, MapEntry<int, int> entry) {
+    final t = AppTheme.of(context);
     final joueur = session.joueurs[entry.key];
     final score = entry.value;
     final medal = rank == 0
-        ? '🥇'
+        ? '\ud83e\udd47'
         : rank == 1
-            ? '🥈'
+            ? '\ud83e\udd48'
             : rank == 2
-                ? '🥉'
+                ? '\ud83e\udd49'
                 : '  ${rank + 1}.';
 
     return Padding(
@@ -191,7 +193,7 @@ class SessionRecapScreen extends StatelessWidget {
               style: TextStyle(
                 fontWeight: rank == 0 ? FontWeight.bold : FontWeight.normal,
                 fontSize: rank == 0 ? 16 : 14,
-                color: rank == 0 ? AppTheme.gold : AppTheme.textPrimary,
+                color: rank == 0 ? t.gold : t.textPrimary,
               ),
             ),
           ),
@@ -201,7 +203,7 @@ class SessionRecapScreen extends StatelessWidget {
               fontWeight: FontWeight.bold,
               fontSize: rank == 0 ? 20 : 16,
               fontFeatures: const [FontFeature.tabularFigures()],
-              color: AppTheme.scoreColor(score),
+              color: t.scoreColor(score),
             ),
           ),
         ],
@@ -227,7 +229,7 @@ class SessionRecapScreen extends StatelessWidget {
                 Text(name,
                     style: const TextStyle(fontWeight: FontWeight.w500)),
                 Text(
-                  '$prises prise(s) — ${(taux * 100).round()}% de réussite',
+                  '$prises prise(s) \u2014 ${(taux * 100).round()}% de r\u00e9ussite',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],

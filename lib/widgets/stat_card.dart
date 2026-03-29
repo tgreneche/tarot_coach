@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Widget carte de statistique — compact pour éviter l'overflow.
+/// Widget carte de statistique -- compact pour \u00e9viter l'overflow.
 class StatCard extends StatelessWidget {
   final String title;
   final String value;
@@ -20,7 +20,8 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = color ?? AppTheme.gold;
+    final t = AppTheme.of(context);
+    final cardColor = color ?? t.gold;
 
     return Card(
       child: Padding(
@@ -36,9 +37,9 @@ class StatCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: AppTheme.bodyFont(
+                    style: t.bodyFont(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: t.textSecondary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -51,7 +52,7 @@ class StatCard extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 value,
-                style: AppTheme.titleFont(
+                style: t.titleFont(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: cardColor,
@@ -62,9 +63,9 @@ class StatCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 subtitle!,
-                style: AppTheme.bodyFont(
+                style: t.bodyFont(
                   fontSize: 12,
-                  color: AppTheme.textSecondary,
+                  color: t.textSecondary,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,

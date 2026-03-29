@@ -3,9 +3,9 @@ import '../../theme/app_theme.dart';
 import '../../models/player.dart';
 import '../../services/storage_service.dart';
 
-/// Carnet de joueurs — CRUD rapide.
+/// Carnet de joueurs -- CRUD rapide.
 class PlayersScreen extends StatefulWidget {
-  /// Si true, on est en mode sélection (retourne les joueurs choisis).
+  /// Si true, on est en mode s\u00e9lection (retourne les joueurs choisis).
   final bool selectionMode;
   final int? nbJoueursRequis;
 
@@ -46,7 +46,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 autofocus: true,
                 maxLength: 6,
                 decoration: const InputDecoration(
-                  labelText: 'Prénom ou pseudo',
+                  labelText: 'Pr\u00e9nom ou pseudo',
                   border: OutlineInputBorder(),
                 ),
                 textCapitalization: TextCapitalization.words,
@@ -117,7 +117,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 autofocus: true,
                 maxLength: 6,
                 decoration: const InputDecoration(
-                  labelText: 'Prénom ou pseudo',
+                  labelText: 'Pr\u00e9nom ou pseudo',
                   border: OutlineInputBorder(),
                 ),
                 textCapitalization: TextCapitalization.words,
@@ -169,6 +169,32 @@ class _PlayersScreenState extends State<PlayersScreen> {
   }
 
   void _deletePlayer(Player player) async {
+    final t = AppTheme.of(context);
+
+    // V\u00e9rifier si le joueur est engag\u00e9 dans des sessions
+    final nbSessions =
+        StorageService.instance.countSessionsForPlayer(player.id);
+    if (nbSessions > 0) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Suppression impossible'),
+          content: Text(
+            '"${player.name}" appara\u00eet dans $nbSessions session(s).\n\n'
+            'Supprimez d\'abord les sessions concern\u00e9es ou renommez-le.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Compris'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -182,7 +208,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.error),
+                backgroundColor: t.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -206,6 +232,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
     final selOk = widget.selectionMode &&
         widget.nbJoueursRequis != null &&
         _selectedIds.length == widget.nbJoueursRequis;
@@ -213,7 +240,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.selectionMode
-            ? 'Sélectionner ${widget.nbJoueursRequis} joueurs'
+            ? 'S\u00e9lectionner ${widget.nbJoueursRequis} joueurs'
             : 'Carnet de joueurs'),
         actions: [
           if (widget.selectionMode)
@@ -237,22 +264,22 @@ class _PlayersScreenState extends State<PlayersScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.people_outline,
-                      size: 64, color: AppTheme.textSecondary),
+                  Icon(Icons.people_outline,
+                      size: 64, color: t.textSecondary),
                   const SizedBox(height: 16),
                   Text(
                     'Aucun joueur dans le carnet',
-                    style: AppTheme.bodyFont(
+                    style: t.bodyFont(
                       fontSize: 16,
-                      color: AppTheme.textSecondary,
+                      color: t.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Ajoutez des joueurs pour commencer',
-                    style: AppTheme.bodyFont(
+                    style: t.bodyFont(
                       fontSize: 13,
-                      color: AppTheme.textSecondary,
+                      color: t.textSecondary,
                     ),
                   ),
                 ],
@@ -270,7 +297,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                   shape: isSelected
                       ? RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.5)),
+                          side: BorderSide(color: t.gold.withValues(alpha: 0.5)),
                         )
                       : null,
                   child: ListTile(
@@ -288,7 +315,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
                       style: TextStyle(
                         fontWeight:
                             isSelected ? FontWeight.bold : FontWeight.normal,
-                        color: isSelected ? AppTheme.gold : AppTheme.textPrimary,
+                        color: isSelected ? t.gold : t.textPrimary,
                       ),
                     ),
                     trailing: widget.selectionMode

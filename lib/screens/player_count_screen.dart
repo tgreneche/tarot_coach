@@ -3,13 +3,15 @@ import '../theme/app_theme.dart';
 import '../models/game.dart';
 import 'card_selection_screen.dart';
 
-/// Écran intermédiaire pour choisir le nombre de joueurs
-/// avant d'accéder à la sélection des cartes.
+/// Ecran intermediaire pour choisir le nombre de joueurs
+/// avant d'acceder a la selection des cartes.
 class PlayerCountScreen extends StatelessWidget {
   const PlayerCountScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Type de partie')),
       body: SafeArea(
@@ -19,16 +21,16 @@ class PlayerCountScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 24),
-              const Icon(
+              Icon(
                 Icons.people,
                 size: 64,
-                color: AppTheme.gold,
+                color: t.gold,
               ),
               const SizedBox(height: 16),
               Text(
                 'Combien de joueurs ?',
                 textAlign: TextAlign.center,
-                style: AppTheme.titleFont(
+                style: t.titleFont(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                 ),
@@ -37,9 +39,9 @@ class PlayerCountScreen extends StatelessWidget {
               Text(
                 'Le nombre de cartes par joueur dépend du nombre de joueurs',
                 textAlign: TextAlign.center,
-                style: AppTheme.bodyFont(
+                style: t.bodyFont(
                   fontSize: 14,
-                  color: AppTheme.textSecondary,
+                  color: t.textSecondary,
                 ),
               ),
               const SizedBox(height: 40),
@@ -62,6 +64,8 @@ class _PlayerCountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     final label = '${playerCount.count} joueurs';
     final subtitle =
         '${playerCount.cardsPerPlayer} cartes / joueur — Chien de ${playerCount.chienSize}';
@@ -85,16 +89,16 @@ class _PlayerCountCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AppTheme.gold.withValues(alpha: 0.15),
+                  color: t.gold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
                     '${playerCount.count}J',
-                    style: AppTheme.titleFont(
+                    style: t.titleFont(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.gold,
+                      color: t.gold,
                     ),
                   ),
                 ),
@@ -106,7 +110,7 @@ class _PlayerCountCard extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -114,17 +118,17 @@ class _PlayerCountCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 13,
-                        color: AppTheme.textSecondary,
+                        color: t.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: AppTheme.textSecondary,
+                color: t.textSecondary,
               ),
             ],
           ),

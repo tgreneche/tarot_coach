@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import '../theme/app_theme.dart';
 
-/// Écran de consultation des règles officielles du Tarot (PDF FFT).
+/// Ecran de consultation des regles officielles du Tarot (PDF FFT).
 class RulesScreen extends StatefulWidget {
   const RulesScreen({super.key});
 
@@ -38,6 +38,8 @@ class _RulesScreenState extends State<RulesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Règles du Tarot'),
@@ -71,23 +73,23 @@ class _RulesScreenState extends State<RulesScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.picture_as_pdf,
-                        size: 64, color: AppTheme.textSecondary),
+                    Icon(Icons.picture_as_pdf,
+                        size: 64, color: t.textSecondary),
                     const SizedBox(height: 16),
                     Text(
                       'PDF des règles non trouvé',
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 16,
-                        color: AppTheme.textSecondary,
+                        color: t.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Placez le fichier des règles FFT à :\n$_assetPath',
                       textAlign: TextAlign.center,
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 13,
-                        color: AppTheme.textSecondary,
+                        color: t.textSecondary,
                       ),
                     ),
                   ],

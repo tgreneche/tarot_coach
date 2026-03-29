@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../engine/trump_tracker.dart';
 
-/// Écran de suivi des atouts joués pendant la partie.
+/// Ecran de suivi des atouts joues pendant la partie.
 class TrumpTrackerScreen extends StatefulWidget {
   const TrumpTrackerScreen({super.key});
 
@@ -49,6 +49,8 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Suivi des atouts'),
@@ -66,22 +68,22 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
-            color: AppTheme.surface,
+            color: t.surface,
             child: Column(
               children: [
                 Text(
                   '${_tracker.remainingCount}',
-                  style: AppTheme.titleFont(
+                  style: t.titleFont(
                     fontSize: 48,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.gold,
+                    color: t.gold,
                   ),
                 ),
                 Text(
                   'atouts restants en jeu',
-                  style: AppTheme.bodyFont(
+                  style: t.bodyFont(
                     fontSize: 16,
-                    color: AppTheme.textSecondary,
+                    color: t.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -114,9 +116,9 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'Tapez sur un atout quand il tombe',
-              style: AppTheme.bodyFont(
+              style: t.bodyFont(
                 fontSize: 13,
-                color: AppTheme.textSecondary,
+                color: t.textSecondary,
               ),
             ),
           ),
@@ -185,9 +187,9 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
                             const SizedBox(height: 8),
                             Text(
                               'Tombés : ${_tracker.playedRanks.join(', ')}',
-                              style: AppTheme.bodyFont(
+                              style: t.bodyFont(
                                 fontSize: 13,
-                                color: AppTheme.textSecondary,
+                                color: t.textSecondary,
                               ),
                             ),
                           ],
@@ -196,10 +198,10 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
                             const SizedBox(height: 8),
                             Text(
                               '⚠️ Encore en jeu : ${_tracker.remainingRanks.join(', ')}',
-                              style: AppTheme.bodyFont(
+                              style: t.bodyFont(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.error,
+                                color: t.error,
                               ),
                             ),
                           ],
@@ -235,21 +237,23 @@ class _TrumpTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     Color bgColor;
     Color textColor;
     Color borderColor;
     if (isPlayed) {
-      bgColor = AppTheme.mort.withValues(alpha: 0.1);
-      textColor = AppTheme.mort.withValues(alpha: 0.4);
-      borderColor = AppTheme.mort.withValues(alpha: 0.2);
+      bgColor = t.mort.withValues(alpha: 0.1);
+      textColor = t.mort.withValues(alpha: 0.4);
+      borderColor = t.mort.withValues(alpha: 0.2);
     } else if (isBout) {
-      bgColor = AppTheme.gold.withValues(alpha: 0.15);
-      textColor = AppTheme.gold;
-      borderColor = AppTheme.gold.withValues(alpha: 0.4);
+      bgColor = t.gold.withValues(alpha: 0.15);
+      textColor = t.gold;
+      borderColor = t.gold.withValues(alpha: 0.4);
     } else {
-      bgColor = AppTheme.surface;
-      textColor = AppTheme.textPrimary;
-      borderColor = AppTheme.textSecondary.withValues(alpha: 0.3);
+      bgColor = t.surface;
+      textColor = t.textPrimary;
+      borderColor = t.textSecondary.withValues(alpha: 0.3);
     }
 
     return Material(
@@ -290,17 +294,19 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: isAlive
-            ? AppTheme.success.withValues(alpha: 0.15)
-            : AppTheme.error.withValues(alpha: 0.15),
+            ? t.success.withValues(alpha: 0.15)
+            : t.error.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isAlive
-              ? AppTheme.success.withValues(alpha: 0.4)
-              : AppTheme.error.withValues(alpha: 0.4),
+              ? t.success.withValues(alpha: 0.4)
+              : t.error.withValues(alpha: 0.4),
         ),
       ),
       child: Row(
@@ -309,13 +315,13 @@ class _StatusChip extends StatelessWidget {
           Icon(
             isAlive ? Icons.check_circle : Icons.cancel,
             size: 16,
-            color: isAlive ? AppTheme.success : AppTheme.error,
+            color: isAlive ? t.success : t.error,
           ),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              color: isAlive ? AppTheme.success : AppTheme.error,
+              color: isAlive ? t.success : t.error,
               fontWeight: FontWeight.w600,
               fontSize: 13,
             ),

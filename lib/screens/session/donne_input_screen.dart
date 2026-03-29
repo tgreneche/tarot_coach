@@ -140,6 +140,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
   }
 
   void _valider() {
+    final t = AppTheme.of(context);
+
     // Validation des champs
     final error = _validate();
     if (error != null) {
@@ -150,7 +152,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.message),
-          backgroundColor: AppTheme.error,
+          backgroundColor: t.error,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -180,9 +182,9 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
     // Vérification somme nulle
     if (!DonneScoreEngine.verifierSommeNulle(scores)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('⚠️ Erreur de calcul : la somme des scores n\'est pas nulle'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: t.error,
         ),
       );
       return;
@@ -213,6 +215,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
     final objectif = pointsRequis(_nbBouts);
     final fait = _pointsPreneur >= objectif;
 
@@ -232,14 +235,14 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
               padding: const EdgeInsets.only(bottom: 4),
               child: Row(
                 children: [
-                  const Icon(Icons.front_hand, size: 16, color: AppTheme.gold),
+                  Icon(Icons.front_hand, size: 16, color: t.gold),
                   const SizedBox(width: 6),
                   Text(
                     'Donneur : ${widget.joueurs[widget.donneurIndex].name}',
-                    style: AppTheme.bodyFont(
+                    style: t.bodyFont(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.gold,
+                      color: t.gold,
                     ),
                   ),
                 ],
@@ -253,20 +256,20 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppTheme.mort.withValues(alpha: 0.15),
+                    color: t.mort.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.pause_circle, size: 16, color: AppTheme.mort),
+                      Icon(Icons.pause_circle, size: 16, color: t.mort),
                       const SizedBox(width: 6),
                       Text(
                         'Mort : ${widget.joueurs[widget.mortIndex!].name}',
-                        style: AppTheme.bodyFont(
+                        style: t.bodyFont(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: AppTheme.mort,
+                          color: t.mort,
                         ),
                       ),
                     ],
@@ -371,7 +374,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                 shape: _errorField == 'roi' || _errorField == 'appele'
                     ? RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
-                        side: const BorderSide(color: AppTheme.error, width: 2),
+                        side: BorderSide(color: t.error, width: 2),
                       )
                     : null,
                 child: Padding(
@@ -384,12 +387,12 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                           Expanded(
                             child: Text('Roi appelé',
                                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      color: _errorField == 'roi' ? AppTheme.error : null,
+                                      color: _errorField == 'roi' ? t.error : null,
                                     )),
                           ),
                           if (_errorField == 'roi')
                             Text(_validationError ?? '',
-                                style: const TextStyle(fontSize: 11, color: AppTheme.error)),
+                                style: TextStyle(fontSize: 11, color: t.error)),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -419,12 +422,12 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                             child: Text('Qui avait le Roi ?',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.w600,
-                                      color: _errorField == 'appele' ? AppTheme.error : null,
+                                      color: _errorField == 'appele' ? t.error : null,
                                     )),
                           ),
                           if (_errorField == 'appele')
                             Text(_validationError ?? '',
-                                style: const TextStyle(fontSize: 11, color: AppTheme.error)),
+                                style: TextStyle(fontSize: 11, color: t.error)),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -526,8 +529,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                                   horizontal: 12, vertical: 4),
                               decoration: BoxDecoration(
                                 color: fait
-                                    ? AppTheme.success.withValues(alpha: 0.2)
-                                    : AppTheme.error.withValues(alpha: 0.2),
+                                    ? t.success.withValues(alpha: 0.2)
+                                    : t.error.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -539,8 +542,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: fait
-                                          ? AppTheme.success
-                                          : AppTheme.error,
+                                          ? t.success
+                                          : t.error,
                                     ),
                               ),
                             ),
@@ -559,10 +562,10 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                       'Objectif : $objectif pts '
                       '(${fait ? "✅ Fait" : "❌ Chuté"} '
                       '${fait ? "+${(_pointsPreneur - objectif).toStringAsFixed(1)}" : "${(_pointsPreneur - objectif).toStringAsFixed(1)}"})',
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: fait ? AppTheme.success : AppTheme.error,
+                        color: fait ? t.success : t.error,
                       ),
                     ),
                   ],
@@ -603,14 +606,14 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                     // Poignée
                     _SectionLabel('Poignée'),
                     SegmentedButton<TypePoignee>(
-                      segments: TypePoignee.values.map((t) {
+                      segments: TypePoignee.values.map((tp) {
                         final seuil = SeuilsPoignee.seuilPour(
-                            widget.joueurs.length, t);
-                        final label = t == TypePoignee.aucune
+                            widget.joueurs.length, tp);
+                        final label = tp == TypePoignee.aucune
                             ? 'Non'
-                            : '${t.label}\n(${seuil ?? ""})';
+                            : '${tp.label}\n(${seuil ?? ""})';
                         return ButtonSegment(
-                          value: t,
+                          value: tp,
                           label: Text(label,
                               style: const TextStyle(fontSize: 10),
                               textAlign: TextAlign.center),
@@ -664,7 +667,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                         contentPadding: EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                       ),
-                      dropdownColor: AppTheme.surface,
+                      dropdownColor: t.surface,
                       items: Chelem.values
                           .map((c) => DropdownMenuItem(
                                 value: c,
@@ -731,8 +734,9 @@ class _ContratButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
     return Material(
-      color: selected ? AppTheme.gold : AppTheme.surface,
+      color: selected ? t.gold : t.surface,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
@@ -743,7 +747,7 @@ class _ContratButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? AppTheme.gold : AppTheme.textSecondary.withValues(alpha: 0.3),
+              color: selected ? t.gold : t.textSecondary.withValues(alpha: 0.3),
               width: selected ? 2 : 1,
             ),
           ),
@@ -755,8 +759,8 @@ class _ContratButton extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: selected ? FontWeight.bold : FontWeight.w500,
                 color: selected
-                    ? AppTheme.primaryDark
-                    : AppTheme.textSecondary,
+                    ? t.primaryDark
+                    : t.textSecondary,
               ),
             ),
           ),
