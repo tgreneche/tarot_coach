@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
-import '../theme/theme_provider.dart';
-import '../main.dart' show themeProvider;
 
 /// Écran À propos.
 class AboutScreen extends StatefulWidget {
@@ -12,20 +10,6 @@ class AboutScreen extends StatefulWidget {
 }
 
 class _AboutScreenState extends State<AboutScreen> {
-  @override
-  void initState() {
-    super.initState();
-    themeProvider.addListener(_onThemeChanged);
-  }
-
-  @override
-  void dispose() {
-    themeProvider.removeListener(_onThemeChanged);
-    super.dispose();
-  }
-
-  void _onThemeChanged() => setState(() {});
-
   @override
   Widget build(BuildContext context) {
     final t = AppTheme.of(context);
@@ -153,46 +137,6 @@ class _AboutScreenState extends State<AboutScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-
-            // === Sélecteur de thème ===
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Apparence',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    _ThemeOption(
-                      themeId: AppThemeId.tapisVert,
-                      label: 'Tapis Vert',
-                      subtitle: '(par défaut)',
-                      previewColor: const Color(0xFF1B5E20),
-                      accentColor: const Color(0xFFD4A843),
-                      isSelected: themeProvider.currentThemeId == AppThemeId.tapisVert,
-                      onTap: () => themeProvider.setTheme(AppThemeId.tapisVert),
-                    ),
-                    const SizedBox(height: 8),
-                    _ThemeOption(
-                      themeId: AppThemeId.classique,
-                      label: 'Classique',
-                      subtitle: '(suit le mode du téléphone)',
-                      previewColor: const Color(0xFFF5F5F5),
-                      accentColor: const Color(0xFF1976D2),
-                      isSelected: themeProvider.currentThemeId == AppThemeId.classique,
-                      onTap: () => themeProvider.setTheme(AppThemeId.classique),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
             const SizedBox(height: 32),
             Text(
               'Développé avec \u2764\ufe0f pour les joueurs de tarot',
@@ -210,96 +154,6 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
             const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ThemeOption extends StatelessWidget {
-  final AppThemeId themeId;
-  final String label;
-  final String subtitle;
-  final Color previewColor;
-  final Color accentColor;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ThemeOption({
-    required this.themeId,
-    required this.label,
-    required this.subtitle,
-    required this.previewColor,
-    required this.accentColor,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final t = AppTheme.of(context);
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? t.gold : t.textSecondary.withValues(alpha: 0.3),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            // Aperçu visuel
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: previewColor,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: t.textSecondary.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Center(
-                child: Container(
-                  width: 14,
-                  height: 14,
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                      color: t.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: t.bodyFont(
-                      fontSize: 12,
-                      color: t.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              Icon(Icons.check_circle, color: t.gold, size: 22),
           ],
         ),
       ),

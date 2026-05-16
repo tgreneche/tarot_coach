@@ -19,42 +19,61 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver {
   Session? _sessionEnCours;
 
   @override
   void initState() {
     super.initState();
-    _checkSessionEnCours();
+    WidgetsBinding.instance.addObserver(this);
+    // Lecture initiale synchrone (sans setState pendant initState)
+    _sessionEnCours = StorageService.instance.getSessionEnCours();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _checkSessionEnCours();
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Quand l'app revient au premier plan, on recharge la session
+  /// au cas où elle aurait été modifiée par un autre flux.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkSessionEnCours();
+    }
   }
 
   void _checkSessionEnCours() {
-    setState(() {
-      _sessionEnCours = StorageService.instance.getSessionEnCours();
-    });
+    if (!mounted) return;
+    final session = StorageService.instance.getSessionEnCours();
+    if (session?.id != _sessionEnCours?.id ||
+        session?.nbDonnesJouees != _sessionEnCours?.nbDonnesJouees) {
+      setState(() {
+        _sessionEnCours = session;
+      });
+    } else {
+      // Garde l'objet le plus à jour même si l'id n'a pas changé
+      _sessionEnCours = session;
+    }
+  }
+
+  /// Pousse une route puis recharge l'état de la session au retour.
+  Future<void> _pushAndRefresh(Widget screen) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
+    );
+    _checkSessionEnCours();
   }
 
   void _naviguerSession() {
     if (_sessionEnCours != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SessionBoardScreen(session: _sessionEnCours!),
-        ),
-      ).then((_) => _checkSessionEnCours());
+      _pushAndRefresh(SessionBoardScreen(session: _sessionEnCours!));
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const NewSessionScreen(),
-        ),
-      ).then((_) => _checkSessionEnCours());
+      _pushAndRefresh(const NewSessionScreen());
     }
   }
 
@@ -88,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'TarotCoach',
+                      'Coach Tarot',
                       style: t.titleFont(
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
@@ -144,12 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle:
                     'Sélectionnez vos cartes et obtenez une recommandation',
                 iconColor: t.gold,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PlayerCountScreen(),
-                  ),
-                ),
+                onTap: () => _pushAndRefresh(const PlayerCountScreen()),
               ),
               const SizedBox(height: 8),
               _FeatureCard(
@@ -157,12 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Suivi des atouts',
                 subtitle: 'Comptez les atouts tombés pendant la partie',
                 iconColor: t.appele,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TrumpTrackerScreen(),
-                  ),
-                ),
+                onTap: () => _pushAndRefresh(const TrumpTrackerScreen()),
               ),
               const SizedBox(height: 8),
               _FeatureCard(
@@ -170,12 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Règles du Tarot',
                 subtitle: 'Règles officielles FFT en PDF',
                 iconColor: t.goldDark,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RulesScreen(),
-                  ),
-                ),
+                onTap: () => _pushAndRefresh(const RulesScreen()),
               ),
               const SizedBox(height: 16),
 
@@ -195,12 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _SmallFeatureCard(
                       icon: Icons.people,
                       title: 'Joueurs',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PlayersScreen(),
-                        ),
-                      ),
+                      onTap: () => _pushAndRefresh(const PlayersScreen()),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -208,12 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _SmallFeatureCard(
                       icon: Icons.history,
                       title: 'Historique',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SessionHistoryScreen(),
-                        ),
-                      ),
+                      onTap: () =>
+                          _pushAndRefresh(const SessionHistoryScreen()),
                     ),
                   ),
                 ],
@@ -223,10 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Lien À propos
               Center(
                 child: TextButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AboutScreen()),
-                  ),
+                  onPressed: () => _pushAndRefresh(const AboutScreen()),
                   icon: const Icon(Icons.info_outline, size: 18),
                   label: const Text('À propos'),
                 ),

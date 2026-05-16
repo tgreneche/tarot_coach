@@ -606,6 +606,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                     // Poignée
                     _SectionLabel('Poignée'),
                     SegmentedButton<TypePoignee>(
+                      showSelectedIcon: false,
                       segments: TypePoignee.values.map((tp) {
                         final seuil = SeuilsPoignee.seuilPour(
                             widget.joueurs.length, tp);

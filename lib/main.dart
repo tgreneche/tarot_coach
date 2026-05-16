@@ -64,7 +64,7 @@ class _TarotCoachAppState extends State<TarotCoachApp> {
     ));
 
     return MaterialApp(
-      title: 'TarotCoach',
+      title: 'Coach Tarot',
       debugShowCheckedModeBanner: false,
       theme: themeProvider.lightTheme,
       darkTheme: themeProvider.darkTheme,
@@ -143,7 +143,7 @@ class _SplashGateState extends State<_SplashGate>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'CoachTarot',
+                      'Coach Tarot',
                       style: t.titleFont(
                         fontSize: 38,
                         fontWeight: FontWeight.w700,
