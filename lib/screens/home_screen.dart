@@ -19,49 +19,68 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver {
   Session? _sessionEnCours;
 
   @override
   void initState() {
     super.initState();
-    _checkSessionEnCours();
+    WidgetsBinding.instance.addObserver(this);
+    // Lecture initiale synchrone (sans setState pendant initState)
+    _sessionEnCours = StorageService.instance.getSessionEnCours();
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _checkSessionEnCours();
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Quand l'app revient au premier plan, on recharge la session
+  /// au cas où elle aurait été modifiée par un autre flux.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkSessionEnCours();
+    }
   }
 
   void _checkSessionEnCours() {
-    setState(() {
-      _sessionEnCours = StorageService.instance.getSessionEnCours();
-    });
+    if (!mounted) return;
+    final session = StorageService.instance.getSessionEnCours();
+    if (session?.id != _sessionEnCours?.id ||
+        session?.nbDonnesJouees != _sessionEnCours?.nbDonnesJouees) {
+      setState(() {
+        _sessionEnCours = session;
+      });
+    } else {
+      // Garde l'objet le plus à jour même si l'id n'a pas changé
+      _sessionEnCours = session;
+    }
+  }
+
+  /// Pousse une route puis recharge l'état de la session au retour.
+  Future<void> _pushAndRefresh(Widget screen) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => screen),
+    );
+    _checkSessionEnCours();
   }
 
   void _naviguerSession() {
     if (_sessionEnCours != null) {
-      // Reprendre la session en cours
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SessionBoardScreen(session: _sessionEnCours!),
-        ),
-      ).then((_) => _checkSessionEnCours());
+      _pushAndRefresh(SessionBoardScreen(session: _sessionEnCours!));
     } else {
-      // Créer une nouvelle session
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const NewSessionScreen(),
-        ),
-      ).then((_) => _checkSessionEnCours());
+      _pushAndRefresh(const NewSessionScreen());
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -76,31 +95,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(20),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.surface,
+                      decoration: BoxDecoration(
+                        color: t.surface,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.style,
                         size: 48,
-                        color: AppTheme.gold,
+                        color: t.gold,
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'TarotCoach',
-                      style: AppTheme.titleFont(
+                      'Coach Tarot',
+                      style: t.titleFont(
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                        color: t.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Votre assistant de Tarot français',
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 15,
-                        color: AppTheme.textSecondary,
+                        color: t.textSecondary,
                       ),
                     ),
                   ],
@@ -121,8 +140,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         '${_sessionEnCours!.joueurs.map((j) => j.name).join(", ")}'
                     : 'Lancer une session de Tarot entre amis avec scoring automatique',
                 iconColor: _sessionEnCours != null
-                    ? AppTheme.gold
-                    : AppTheme.success,
+                    ? t.gold
+                    : t.success,
                 highlighted: _sessionEnCours != null,
                 onTap: _naviguerSession,
               ),
@@ -131,10 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
               // === OUTILS ===
               Text(
                 'Outils',
-                style: AppTheme.bodyFont(
+                style: t.bodyFont(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+                  color: t.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -143,49 +162,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: 'Analyser ma main',
                 subtitle:
                     'Sélectionnez vos cartes et obtenez une recommandation',
-                iconColor: AppTheme.gold,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PlayerCountScreen(),
-                  ),
-                ),
+                iconColor: t.gold,
+                onTap: () => _pushAndRefresh(const PlayerCountScreen()),
               ),
               const SizedBox(height: 8),
               _FeatureCard(
                 icon: Icons.visibility,
                 title: 'Suivi des atouts',
                 subtitle: 'Comptez les atouts tombés pendant la partie',
-                iconColor: AppTheme.appele,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const TrumpTrackerScreen(),
-                  ),
-                ),
+                iconColor: t.appele,
+                onTap: () => _pushAndRefresh(const TrumpTrackerScreen()),
               ),
               const SizedBox(height: 8),
               _FeatureCard(
                 icon: Icons.menu_book,
                 title: 'Règles du Tarot',
                 subtitle: 'Règles officielles FFT en PDF',
-                iconColor: AppTheme.goldDark,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const RulesScreen(),
-                  ),
-                ),
+                iconColor: t.goldDark,
+                onTap: () => _pushAndRefresh(const RulesScreen()),
               ),
               const SizedBox(height: 16),
 
               // === GESTION ===
               Text(
                 'Gestion',
-                style: AppTheme.bodyFont(
+                style: t.bodyFont(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+                  color: t.textSecondary,
                 ),
               ),
               const SizedBox(height: 8),
@@ -195,12 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _SmallFeatureCard(
                       icon: Icons.people,
                       title: 'Joueurs',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PlayersScreen(),
-                        ),
-                      ),
+                      onTap: () => _pushAndRefresh(const PlayersScreen()),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -208,12 +207,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: _SmallFeatureCard(
                       icon: Icons.history,
                       title: 'Historique',
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SessionHistoryScreen(),
-                        ),
-                      ),
+                      onTap: () =>
+                          _pushAndRefresh(const SessionHistoryScreen()),
                     ),
                   ),
                 ],
@@ -223,10 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Lien À propos
               Center(
                 child: TextButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AboutScreen()),
-                  ),
+                  onPressed: () => _pushAndRefresh(const AboutScreen()),
                   icon: const Icon(Icons.info_outline, size: 18),
                   label: const Text('À propos'),
                 ),
@@ -259,11 +251,13 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Card(
       shape: highlighted
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: AppTheme.gold.withValues(alpha: 0.3)),
+              side: BorderSide(color: t.gold.withValues(alpha: 0.3)),
             )
           : null,
       clipBehavior: Clip.antiAlias,
@@ -288,26 +282,26 @@ class _FeatureCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
+                        color: t.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: AppTheme.bodyFont(
+                      style: t.bodyFont(
                         fontSize: 13,
-                        color: AppTheme.textSecondary,
+                        color: t.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
-                color: AppTheme.textSecondary,
+                color: t.textSecondary,
               ),
             ],
           ),
@@ -330,6 +324,8 @@ class _SmallFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -339,14 +335,14 @@ class _SmallFeatureCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: AppTheme.gold, size: 22),
+              Icon(icon, color: t.gold, size: 22),
               const SizedBox(width: 8),
               Text(
                 title,
-                style: AppTheme.bodyFont(
+                style: t.bodyFont(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
+                  color: t.textPrimary,
                 ),
               ),
             ],

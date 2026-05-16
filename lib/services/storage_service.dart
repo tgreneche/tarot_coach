@@ -53,18 +53,50 @@ class StorageService {
   }
 
   /// Met à jour un joueur existant.
+  /// Propage le changement (nom, couleur) dans toutes les sessions
+  /// (en cours et clôturées) qui contiennent ce joueur.
   Future<List<Player>> updatePlayer(Player player) async {
     final players = loadPlayers();
     final idx = players.indexWhere((p) => p.id == player.id);
     if (idx >= 0) {
       players[idx] = player;
       await savePlayers(players);
+
+      // Propager dans toutes les sessions
+      final sessions = loadSessions();
+      bool sessionsModified = false;
+      for (final session in sessions) {
+        for (var j = 0; j < session.joueurs.length; j++) {
+          if (session.joueurs[j].id == player.id) {
+            session.joueurs[j] = player;
+            sessionsModified = true;
+          }
+        }
+      }
+      if (sessionsModified) {
+        await _saveSessions(sessions);
+      }
     }
     return players;
   }
 
+  /// Compte le nombre de sessions contenant un joueur donné.
+  int countSessionsForPlayer(String playerId) {
+    final sessions = loadSessions();
+    return sessions.where((s) =>
+        s.joueurs.any((j) => j.id == playerId)).length;
+  }
+
   /// Supprime un joueur.
+  /// Lève une [StateError] si le joueur est engagé dans au moins une session.
   Future<List<Player>> removePlayer(String playerId) async {
+    final nbSessions = countSessionsForPlayer(playerId);
+    if (nbSessions > 0) {
+      throw StateError(
+        'Ce joueur apparaît dans $nbSessions session(s). '
+        'Supprimez d\'abord les sessions concernées ou renommez-le.',
+      );
+    }
     final players = loadPlayers();
     players.removeWhere((p) => p.id == playerId);
     await savePlayers(players);

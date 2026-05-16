@@ -6,8 +6,8 @@ import '../engine/hand_evaluator.dart';
 import '../widgets/card_widget.dart';
 import 'hand_analysis_screen.dart';
 
-/// Écran de sélection des cartes de la main.
-/// Reçoit le [playerCount] depuis l'écran intermédiaire.
+/// Ecran de selection des cartes de la main.
+/// Recoit le [playerCount] depuis l'ecran intermediaire.
 class CardSelectionScreen extends StatefulWidget {
   final PlayerCount playerCount;
 
@@ -132,12 +132,14 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
   Widget _buildSelectedHand() {
     if (_selectedCards.isEmpty) return const SizedBox.shrink();
 
+    final t = AppTheme.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: t.surface,
         border: Border(
           top: BorderSide(
-            color: AppTheme.textSecondary.withValues(alpha: 0.2),
+            color: t.textSecondary.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -200,6 +202,7 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
     final isReady = _selectedIds.length == _expectedCards;
 
     return Scaffold(
@@ -210,20 +213,22 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
         bottom: TabBar(
           controller: _tabController,
           isScrollable: false,
-          tabs: const [
+          tabs: [
             Tab(
-              icon: Text('★', style: TextStyle(fontSize: 22, color: AppTheme.gold)),
+              icon: TextStyle(fontSize: 22, color: t.gold) == const TextStyle()
+                  ? null
+                  : Text('★', style: TextStyle(fontSize: 22, color: t.gold)),
             ),
-            Tab(
+            const Tab(
               icon: Text('♥', style: TextStyle(fontSize: 22, color: Colors.red)),
             ),
-            Tab(
+            const Tab(
               icon: Text('♦', style: TextStyle(fontSize: 22, color: Colors.red)),
             ),
-            Tab(
+            const Tab(
               icon: Text('♣', style: TextStyle(fontSize: 22, color: Colors.blue)),
             ),
-            Tab(
+            const Tab(
               icon: Text('♠', style: TextStyle(fontSize: 22, color: Colors.blue)),
             ),
           ],

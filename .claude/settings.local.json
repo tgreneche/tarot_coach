@@ -12,7 +12,8 @@
       "Bash(where py:*)",
       "Bash(where python3:*)",
       "Bash(where python:*)",
-      "Bash(py -3 --version)"
+      "Bash(py -3 --version)",
+      "Bash(xargs cat:*)"
     ]
   }
 }

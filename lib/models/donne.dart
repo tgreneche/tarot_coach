@@ -165,6 +165,26 @@ class Donne {
     required this.scores,
   });
 
+  /// Retourne une copie avec un numéro différent.
+  Donne copyWithNumero(int newNumero) => Donne(
+        id: id,
+        numero: newNumero,
+        timestamp: timestamp,
+        preneurIndex: preneurIndex,
+        contrat: contrat,
+        nbBouts: nbBouts,
+        pointsPreneur: pointsPreneur,
+        roiAppele: roiAppele,
+        appeleIndex: appeleIndex,
+        petitAuBout: petitAuBout,
+        poignee: poignee,
+        campPoignee: campPoignee,
+        chelem: chelem,
+        donneurIndex: donneurIndex,
+        mortIndex: mortIndex,
+        scores: scores,
+      );
+
   /// Le contrat est-il fait ?
   bool get estFait => pointsPreneur >= pointsRequis(nbBouts);
 
