@@ -512,7 +512,12 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.style, size: 18, color: t.gold),
+                  Image.asset(
+                    'assets/images/logo_main_no_background.png',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.contain,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Votre main',

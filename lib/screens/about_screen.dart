@@ -22,14 +22,11 @@ class _AboutScreenState extends State<AboutScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: t.surface,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.style, size: 48,
-                  color: t.gold),
+            Image.asset(
+              'assets/images/logo_main_no_background.png',
+              width: 240,
+              height: 240,
+              fit: BoxFit.contain,
             ),
             const SizedBox(height: 16),
             Text(

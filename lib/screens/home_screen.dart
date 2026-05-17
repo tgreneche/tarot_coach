@@ -93,19 +93,12 @@ class _HomeScreenState extends State<HomeScreen>
               Center(
                 child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: t.surface,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.style,
-                        size: 48,
-                        color: t.gold,
-                      ),
+                    Image.asset(
+                      'assets/images/logo_main_no_background.png',
+                      width: 240,
+                      fit: BoxFit.contain,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 4),
                     Text(
                       'Coach Tarot',
                       style: t.titleFont(
