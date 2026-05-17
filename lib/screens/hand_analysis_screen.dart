@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../models/card.dart';
+import '../models/game.dart';
 import '../models/hand.dart';
 import '../widgets/card_widget.dart';
 import '../widgets/stat_card.dart';
@@ -200,6 +201,223 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                   ],
                 );
               },
+            ),
+            const SizedBox(height: 16),
+
+            // === DECOMPOSITION DES POINTS ===
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(color: t.gold.withValues(alpha: 0.25)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.calculate, color: t.gold, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Evaluation en points',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: t.gold.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border:
+                                Border.all(color: t.gold.withValues(alpha: 0.4)),
+                          ),
+                          child: Text(
+                            '${widget.analysis.points.total} pts',
+                            style: t.titleFont(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: t.gold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Bareme inspire de le-tarot.fr',
+                      style: t.bodyFont(
+                          fontSize: 11, color: t.textSecondary),
+                    ),
+                    const SizedBox(height: 12),
+                    _PointsLine(
+                      emoji: '🏆',
+                      label: 'Bouts',
+                      value: widget.analysis.points.boutPoints,
+                    ),
+                    _PointsLine(
+                      emoji: '⭐',
+                      label: 'Atouts',
+                      value: widget.analysis.points.trumpPoints,
+                    ),
+                    _PointsLine(
+                      emoji: '👑',
+                      label: 'Honneurs (hors atout)',
+                      value: widget.analysis.points.honorPoints,
+                    ),
+                    _PointsLine(
+                      emoji: '📐',
+                      label: 'Distribution',
+                      value: widget.analysis.points.distributionPoints,
+                    ),
+                    const Divider(height: 20),
+                    // Seuils
+                    Text(
+                      'Seuils ${widget.analysis.playerCount.count}J '
+                      '${widget.analysis.playsAlone ? "(solo)" : "(equipier)"}',
+                      style: t.bodyFont(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: t.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    _ThresholdRow(
+                      label: 'Petite',
+                      threshold: widget.analysis.thresholds.petite,
+                      current: widget.analysis.points.total,
+                    ),
+                    _ThresholdRow(
+                      label: 'Garde',
+                      threshold: widget.analysis.thresholds.garde,
+                      current: widget.analysis.points.total,
+                    ),
+                    _ThresholdRow(
+                      label: 'Garde Sans',
+                      threshold: widget.analysis.thresholds.gardeSans,
+                      current: widget.analysis.points.total,
+                    ),
+                    _ThresholdRow(
+                      label: 'Garde Contre',
+                      threshold: widget.analysis.thresholds.gardeContre,
+                      current: widget.analysis.points.total,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // === ANALYSE STRATÉGIQUE ===
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(color: t.gold.withValues(alpha: 0.25)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.psychology, color: t.gold, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Analyse strategique',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Atouts maitres
+                    _StratLine(
+                      emoji: '🎯',
+                      label: 'Atouts maitres garantis',
+                      value: widget.analysis.consecutiveTopTrumps == 0
+                          ? 'aucun (pas de 21)'
+                          : '${widget.analysis.consecutiveTopTrumps} atout(s) en sequence depuis le 21',
+                    ),
+                    // Atouts hauts supplementaires
+                    if (widget.analysis.highTrumpsCount >
+                        widget.analysis.consecutiveTopTrumps)
+                      _StratLine(
+                        emoji: '⚔️',
+                        label: 'Atouts hauts (>=18)',
+                        value:
+                            '${widget.analysis.highTrumpsCount} au total',
+                      ),
+                    // Plis estimes
+                    _StratLine(
+                      emoji: '📊',
+                      label: 'Plis sur estimes',
+                      value:
+                          '~${widget.analysis.estimatedTricks} pli(s) avant tirage du chien',
+                    ),
+                    // Contexte solo/equipier
+                    _StratLine(
+                      emoji: widget.analysis.playsAlone ? '🚶' : '🤝',
+                      label: 'Contexte de jeu',
+                      value: widget.analysis.playsAlone
+                          ? (widget.analysis.playerCount == PlayerCount.five
+                              ? 'SEUL (4 Rois en main, Dame appelee)'
+                              : 'SEUL (jeu a ${widget.analysis.playerCount.count}J)')
+                          : 'Avec un equipier (Roi appele)',
+                    ),
+                    // Strategie d'appel (5J)
+                    if (widget.analysis.kingCallStrategy != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: t.gold.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: t.gold.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('♛', style: TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Strategie d\'appel',
+                                    style: t.bodyFont(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: t.gold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    widget.analysis.kingCallStrategy!
+                                        .explanation,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -601,6 +819,162 @@ class _CardGridMetrics {
     required this.rows,
     required this.gridHeight,
   });
+}
+
+class _PointsLine extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final int value;
+
+  const _PointsLine({
+    required this.emoji,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: t.bodyFont(fontSize: 13, color: t.textPrimary),
+            ),
+          ),
+          Text(
+            '+$value pts',
+            style: t.bodyFont(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: value > 0 ? t.gold : t.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThresholdRow extends StatelessWidget {
+  final String label;
+  final int threshold;
+  final int current;
+
+  const _ThresholdRow({
+    required this.label,
+    required this.threshold,
+    required this.current,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+    final reached = current >= threshold;
+    final progress = (current / threshold).clamp(0.0, 1.0);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 90,
+            child: Text(
+              label,
+              style: t.bodyFont(
+                fontSize: 12,
+                fontWeight:
+                    reached ? FontWeight.w600 : FontWeight.w400,
+                color: reached ? t.success : t.textSecondary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor: t.primaryDark,
+                color: reached ? t.success : t.gold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 56,
+            child: Text(
+              '$current / $threshold',
+              style: t.bodyFont(
+                fontSize: 11,
+                color: reached ? t.success : t.textSecondary,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+          if (reached) ...[
+            const SizedBox(width: 4),
+            Icon(Icons.check_circle, size: 14, color: t.success),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StratLine extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final String value;
+
+  const _StratLine({
+    required this.emoji,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$label : ',
+                    style: t.bodyFont(
+                      fontSize: 13,
+                      color: t.textSecondary,
+                    ),
+                  ),
+                  TextSpan(
+                    text: value,
+                    style: t.bodyFont(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: t.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _DistributionBar extends StatelessWidget {

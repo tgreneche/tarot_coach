@@ -85,7 +85,10 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
       return;
     }
 
-    final analysis = HandEvaluator.evaluate(_selectedCards);
+    final analysis = HandEvaluator.evaluate(
+      _selectedCards,
+      playerCount: widget.playerCount,
+    );
     Navigator.push(
       context,
       MaterialPageRoute(
