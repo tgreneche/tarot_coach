@@ -1,16 +1,24 @@
 import '../models/card.dart';
+import '../models/game.dart';
 import '../models/hand.dart';
 
-/// Moteur d'évaluation de la main de Tarot.
+/// Moteur d'evaluation de la main de Tarot francais.
 ///
-/// Analyse une main de 15, 18 ou 24 cartes et recommande
-/// le contrat optimal avec un niveau de confiance.
+/// Analyse une main en tenant compte du **nombre de joueurs**, de la
+/// **strategie d'appel** (5J), de la **sequence d'atouts maitres** et
+/// donne une recommandation de contrat coherente avec la pratique FFT.
 class HandEvaluator {
-  /// Analyse complète d'une main.
-  static HandAnalysis evaluate(List<TarotCard> hand) {
+  /// Analyse complete d'une main.
+  ///
+  /// [hand] : les cartes du joueur (15 a 5J, 18 a 4J, 24 a 3J).
+  /// [playerCount] : nombre de joueurs (obligatoire pour une analyse pertinente).
+  static HandAnalysis evaluate(
+    List<TarotCard> hand, {
+    required PlayerCount playerCount,
+  }) {
     final sorted = List<TarotCard>.from(hand)..sort();
 
-    // Calculs de base
+    // ===== Statistiques de base =====
     final trumps = sorted.where((c) => c.isTrump || c.isExcuse).toList();
     final trumpCount = trumps.where((c) => !c.isExcuse).length +
         (trumps.any((c) => c.isExcuse) ? 1 : 0);
@@ -28,28 +36,68 @@ class HandEvaluator {
       suitLengths[suit] = cards.length;
     }
 
-    // Force de la main (0-100)
-    final strength = _calculateStrength(
-      trumpCount: trumpCount,
-      boutCount: bouts.length,
-      totalPoints: totalPoints,
-      kingCount: kings.length,
-      faceCount: faces.length,
+    // ===== Analyse strategique des atouts =====
+    final consecutiveTop = _consecutiveTopTrumps(sorted);
+    final highTrumps = sorted
+        .where((c) => c.isTrump && !c.isExcuse && c.rank >= 18)
+        .length;
+    final midTrumps = sorted
+        .where((c) => c.isTrump && !c.isExcuse && c.rank >= 12)
+        .length;
+
+    // ===== Strategie d'appel (5J uniquement) =====
+    final kingCallStrategy = playerCount == PlayerCount.five
+        ? _computeKingCallStrategy(sorted, kings)
+        : null;
+
+    // Le preneur joue-t-il SEUL ?
+    // - A 3J/4J : toujours seul.
+    // - A 5J : seul uniquement si on a les 4 Rois (oblige d'appeler une Dame
+    //   dont le porteur ne saura qu'il est equipier qu'a la chute).
+    final playsAlone = playerCount != PlayerCount.five ||
+        (kingCallStrategy?.mustCallQueen ?? false) ||
+        !(kingCallStrategy?.willPlayWithTeammate ?? true);
+
+    // ===== Estimation des plis gagnables =====
+    final estimatedTricks = _estimateTricks(
+      sorted: sorted,
       suitLengths: suitLengths,
-      hand: sorted,
+      consecutiveTop: consecutiveTop,
+      trumpCount: trumpCount,
+      kings: kings,
+      playerCount: playerCount,
+      playsAlone: playsAlone,
     );
 
-    // Recommandation de contrat
+    // ===== Decomposition en points (bareme le-tarot.fr) =====
+    final points = _calculateHandPoints(
+      hand: sorted,
+      suitDist: suitDist,
+      suitLengths: suitLengths,
+    );
+
+    // ===== Seuils de prise ajustes au contexte =====
+    final thresholds = _pointsThresholds(playerCount, playsAlone);
+
+    // ===== Force de la main (0-100) derivee des points =====
+    // 100 = niveau Garde Contre (~81 pts a 4J).
+    final strength =
+        (points.total / thresholds.gardeContre * 100).clamp(0.0, 100.0);
+
+    // ===== Recommandation de contrat =====
     final recommendation = _recommendContract(
-      trumpCount: trumpCount,
-      boutCount: bouts.length,
-      strength: strength,
+      points: points,
+      thresholds: thresholds,
       hand: sorted,
-      suitLengths: suitLengths,
+      consecutiveTop: consecutiveTop,
       kingCount: kings.length,
+      playerCount: playerCount,
+      playsAlone: playsAlone,
+      kingCallStrategy: kingCallStrategy,
+      suitLengths: suitLengths,
     );
 
-    // Conseils de jeu
+    // ===== Conseils de jeu contextuels =====
     final tips = _generateTips(
       hand: sorted,
       trumpCount: trumpCount,
@@ -57,10 +105,16 @@ class HandEvaluator {
       kings: kings,
       suitLengths: suitLengths,
       recommendation: recommendation,
+      consecutiveTop: consecutiveTop,
+      highTrumps: highTrumps,
+      playerCount: playerCount,
+      playsAlone: playsAlone,
+      kingCallStrategy: kingCallStrategy,
     );
 
     return HandAnalysis(
       hand: sorted,
+      playerCount: playerCount,
       trumpCount: trumpCount,
       boutCount: bouts.length,
       bouts: bouts,
@@ -72,169 +126,536 @@ class HandEvaluator {
       recommendation: recommendation,
       tips: tips,
       handStrength: strength,
+      consecutiveTopTrumps: consecutiveTop,
+      highTrumpsCount: highTrumps,
+      midTrumpsCount: midTrumps,
+      estimatedTricks: estimatedTricks,
+      playsAlone: playsAlone,
+      kingCallStrategy: kingCallStrategy,
+      points: points,
+      thresholds: thresholds,
     );
   }
 
+  // ===================== EVALUATION EN POINTS =====================
+
+  /// Calcule la decomposition des points selon le bareme
+  /// inspire de https://www.le-tarot.fr/quel-contrat-choisir/.
+  static HandPoints _calculateHandPoints({
+    required List<TarotCard> hand,
+    required Map<TarotSuit, List<TarotCard>> suitDist,
+    required Map<TarotSuit, int> suitLengths,
+  }) {
+    // === Bouts ===
+    int boutPts = 0;
+    final has21 = hand.any((c) => c.is21);
+    final hasExcuse = hand.any((c) => c.isExcuse);
+    final hasPetit = hand.any((c) => c.isPetit);
+
+    if (has21) boutPts += 10;
+    if (hasExcuse) boutPts += 7;
+
+    if (hasPetit) {
+      // Petit : sa valeur depend du nombre d'atouts AU-DESSUS de lui en main.
+      // < 4 atouts au-dessus -> 0 pts (Petit imprenable rate)
+      // 4-7 -> graduation lineaire
+      // >= 8 -> 8 pts (Petit "imprenable")
+      final trumpsAbovePetit = hand
+          .where((c) => c.isTrump && !c.isExcuse && c.rank > 1)
+          .length;
+      if (trumpsAbovePetit < 4) {
+        boutPts += 0;
+      } else if (trumpsAbovePetit >= 8) {
+        boutPts += 8;
+      } else {
+        boutPts += trumpsAbovePetit; // 4,5,6,7
+      }
+    }
+
+    // === Atouts ===
+    int trumpPts = 0;
+    final trumpCards = hand
+        .where((c) => c.isTrump && !c.isExcuse)
+        .toList()
+      ..sort((a, b) => a.rank.compareTo(b.rank));
+
+    // Base : 2 pts par atout
+    trumpPts += trumpCards.length * 2;
+
+    // Bonus gros atouts (>= 16)
+    for (final tc in trumpCards) {
+      if (tc.rank >= 16) trumpPts += 2;
+    }
+
+    // Bonus sequences : +1 par paire d'atouts (>= 12) consecutifs
+    final ranks = trumpCards.map((c) => c.rank).toSet();
+    for (int r = 12; r <= 20; r++) {
+      if (ranks.contains(r) && ranks.contains(r + 1)) {
+        trumpPts += 1;
+      }
+    }
+
+    // === Honneurs (hors atout) ===
+    int honorPts = 0;
+    for (final suit in TarotSuit.values) {
+      if (suit == TarotSuit.atout) continue;
+      final cardsInSuit = suitDist[suit] ?? const <TarotCard>[];
+      final hasKing = cardsInSuit.any((c) => c.rank == 14);
+      final hasQueen = cardsInSuit.any((c) => c.rank == 13);
+      final hasKnight = cardsInSuit.any((c) => c.rank == 12);
+      final hasJack = cardsInSuit.any((c) => c.rank == 11);
+
+      if (hasKing && hasQueen) {
+        honorPts += 10; // Mariage Roi+Dame
+      } else {
+        if (hasKing) honorPts += 6;
+        if (hasQueen) honorPts += 3;
+      }
+      if (hasKnight) honorPts += 2;
+      if (hasJack) honorPts += 1;
+    }
+
+    // === Distribution ===
+    int distPts = 0;
+    for (final entry in suitLengths.entries) {
+      if (entry.key == TarotSuit.atout) continue;
+      final len = entry.value;
+      // Longues (>= 5 cartes)
+      if (len >= 5) {
+        distPts += 5 + (len - 5) * 2;
+      }
+      // Courtes (compte pour Garde+ ; on les compte toujours en pratique
+      // car elles servent a couper a tout contrat)
+      if (len == 0) {
+        distPts += 5; // chicane
+      } else if (len == 1) {
+        distPts += 3; // singleton
+      } else if (len == 2) {
+        distPts += 1; // doubleton
+      }
+    }
+
+    return HandPoints(
+      boutPoints: boutPts,
+      trumpPoints: trumpPts,
+      honorPoints: honorPts,
+      distributionPoints: distPts,
+    );
+  }
+
+  /// Seuils de prise (en points) ajustes au nombre de joueurs et au
+  /// contexte solo/equipier (5J).
+  ///
+  /// Base : 40 / 56 / 71 / 81 (le-tarot.fr, 4J).
+  /// - 3J : +5 (mains plus riches en moyenne)
+  /// - 4J : base
+  /// - 5J avec equipier : -7 (apport du coequipier)
+  /// - 5J en solo (4 Rois) : base
+  static PointsThresholds _pointsThresholds(
+    PlayerCount playerCount,
+    bool playsAlone,
+  ) {
+    switch (playerCount) {
+      case PlayerCount.three:
+        return const PointsThresholds(
+          petite: 45,
+          garde: 61,
+          gardeSans: 76,
+          gardeContre: 86,
+        );
+      case PlayerCount.four:
+        return const PointsThresholds(
+          petite: 40,
+          garde: 56,
+          gardeSans: 71,
+          gardeContre: 81,
+        );
+      case PlayerCount.five:
+        if (playsAlone) {
+          return const PointsThresholds(
+            petite: 40,
+            garde: 56,
+            gardeSans: 71,
+            gardeContre: 81,
+          );
+        } else {
+          return const PointsThresholds(
+            petite: 33,
+            garde: 49,
+            gardeSans: 64,
+            gardeContre: 74,
+          );
+        }
+    }
+  }
+
+  // ===================== METHODES UTILITAIRES =====================
+
   /// Compte les points dans un ensemble de cartes.
   static double _countPoints(List<TarotCard> cards) {
-    // Comptage officiel par paires : chaque carte haute + une basse = points carte haute + 0.5
-    // Simplifié ici : on additionne les points individuels
     return cards.fold(0.0, (sum, card) => sum + card.points);
   }
 
-  /// Calcule les points d'un ensemble de cartes (méthode publique pour le score).
+  /// Calcule les points (methode publique pour le score).
   static double countPoints(List<TarotCard> cards) => _countPoints(cards);
 
-  /// Calcule la force globale de la main (0-100).
-  static double _calculateStrength({
-    required int trumpCount,
-    required int boutCount,
-    required double totalPoints,
-    required int kingCount,
-    required int faceCount,
-    required Map<TarotSuit, int> suitLengths,
-    required List<TarotCard> hand,
-  }) {
-    double score = 0;
-
-    // Atouts (max 40 points) — le facteur le plus important
-    score += (trumpCount / 21) * 40;
-
-    // Bouts (max 25 points) — réduit les points nécessaires
-    score += (boutCount / 3) * 25;
-
-    // Points dans la main (max 15 points)
-    score += (totalPoints / 45) * 15;
-
-    // Rois (max 10 points)
-    score += (kingCount / 4) * 10;
-
-    // Coupes / chicanes (max 10 points)
-    final voids = suitLengths.entries
-        .where((e) => e.key != TarotSuit.atout && e.value == 0)
-        .length;
-    final singletons = suitLengths.entries
-        .where((e) => e.key != TarotSuit.atout && e.value == 1)
-        .length;
-    score += voids * 4 + singletons * 1.5;
-
-    // Atouts hauts (max bonus)
-    final highTrumps =
-        hand.where((c) => c.isTrump && !c.isExcuse && c.rank >= 15).length;
-    score += highTrumps * 0.5;
-
-    return score.clamp(0, 100);
+  /// Compte les atouts en sequence depuis le 21 descendant.
+  ///
+  /// Ces atouts sont **garantis maitres** : 21 > 20 > 19 > ...
+  /// On s'arrete a la premiere "trouee" dans la sequence.
+  static int _consecutiveTopTrumps(List<TarotCard> hand) {
+    final ranks = hand
+        .where((c) => c.isTrump && !c.isExcuse)
+        .map((c) => c.rank)
+        .toSet();
+    int count = 0;
+    for (int r = 21; r >= 1; r--) {
+      if (ranks.contains(r)) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    return count;
   }
 
-  /// Recommande un contrat basé sur l'analyse.
-  static ContractRecommendation _recommendContract({
-    required int trumpCount,
-    required int boutCount,
-    required double strength,
-    required List<TarotCard> hand,
-    required Map<TarotSuit, int> suitLengths,
-    required int kingCount,
-  }) {
-    // Le Petit sans protection est un facteur de risque
-    final hasPetit = hand.any((c) => c.isPetit);
-    final petitProtected = hasPetit && trumpCount >= 5;
+  /// Calcule la strategie d'appel du Roi (specifique au tarot a 5J).
+  ///
+  /// - 0 Roi en main : on appelle un Roi qu'on n'a pas -> equipier (souvent
+  ///   un avantage car le porteur du Roi joue ses points avec nous).
+  /// - 1 a 3 Rois en main : on appelle le Roi manquant qui complete au mieux
+  ///   notre jeu (preferentiellement dans la couleur ou on a deja un Roi pour
+  ///   les "auto-appels" tactiques, ou dans la couleur la plus longue).
+  /// - 4 Rois en main : OBLIGATION d'appeler une Dame -> on joue SEUL
+  ///   (le porteur de la Dame ne saura qu'il est equipier qu'a la chute).
+  static KingCallStrategy? _computeKingCallStrategy(
+    List<TarotCard> hand,
+    List<TarotCard> kingsInHand,
+  ) {
+    if (kingsInHand.length == 4) {
+      return const KingCallStrategy(
+        suitToCall: null,
+        willPlayWithTeammate: false,
+        mustCallQueen: true,
+        explanation:
+            'Vous avez les 4 Rois en main : vous devrez appeler une Dame. '
+            'Le porteur de la Dame ne saura qu\'il est votre equipier qu\'au '
+            'moment ou il jouera cette Dame. Concretement : vous jouez SEUL '
+            'au depart, comme a 4 joueurs.',
+      );
+    }
 
-    // Nombre de coupes (couleurs à 0)
-    final voids = suitLengths.entries
+    if (kingsInHand.isEmpty) {
+      // Aucun Roi -> on appelle n'importe quel Roi, on aura un equipier.
+      return const KingCallStrategy(
+        suitToCall: null,
+        willPlayWithTeammate: true,
+        mustCallQueen: false,
+        explanation:
+            'Vous n\'avez aucun Roi : peu importe le Roi appele, vous aurez '
+            'un equipier. Appelez idealement dans une couleur ou vous etes '
+            'long pour que votre equipier coupe avec vous, ou ou vous avez '
+            'des cartes hautes a defendre.',
+      );
+    }
+
+    // Cas general : 1 a 3 Rois en main.
+    // Recommander d'appeler le Roi d'une couleur manquante (chicane) ou
+    // courte (singleton) pour maximiser l'aide d'un equipier dans cette
+    // couleur.
+    final suitLengths = <TarotSuit, int>{};
+    for (final s in TarotSuit.values) {
+      if (s == TarotSuit.atout) continue;
+      suitLengths[s] = hand.where((c) => c.suit == s).length;
+    }
+    final missingKingSuits = TarotSuit.values
+        .where((s) => s != TarotSuit.atout)
+        .where((s) => !kingsInHand.any((k) => k.suit == s))
+        .toList();
+
+    // Tri : couleurs ou on a 0-1 carte d'abord, puis longues couleurs.
+    missingKingSuits.sort((a, b) {
+      final la = suitLengths[a] ?? 0;
+      final lb = suitLengths[b] ?? 0;
+      if (la != lb) return la.compareTo(lb);
+      return 0;
+    });
+
+    final bestCall = missingKingSuits.first;
+    final lengthBest = suitLengths[bestCall] ?? 0;
+
+    String reason;
+    if (lengthBest == 0) {
+      reason =
+          'Appelez le Roi de ${bestCall.label} : vous etes chicane dans '
+          'cette couleur, votre equipier vous trouvera et pourra prendre '
+          'des plis pendant que vous coupez.';
+    } else if (lengthBest == 1) {
+      reason =
+          'Appelez le Roi de ${bestCall.label} : vous n\'avez qu\'une seule '
+          'carte dans cette couleur, votre equipier prendra le relais.';
+    } else {
+      reason =
+          'Appelez le Roi de ${bestCall.label} (${kingsInHand.length} Rois '
+          'deja en main). Votre equipier devrait apporter quelques points.';
+    }
+
+    return KingCallStrategy(
+      suitToCall: bestCall,
+      willPlayWithTeammate: true,
+      mustCallQueen: false,
+      explanation: reason,
+    );
+  }
+
+  /// Estime grossierement le nombre de plis que la main peut gagner
+  /// **avant** de tirer du chien.
+  ///
+  /// Methode simplifiee :
+  /// - Chaque atout en sequence depuis le 21 = 1 pli sur.
+  /// - Chaque Roi protege (>= 3 cartes dans la couleur) = 1 pli probable.
+  /// - Chaque chicane (couleur a 0) = autant de coupes que d'atouts moyens+.
+  static int _estimateTricks({
+    required List<TarotCard> sorted,
+    required Map<TarotSuit, int> suitLengths,
+    required int consecutiveTop,
+    required int trumpCount,
+    required List<TarotCard> kings,
+    required PlayerCount playerCount,
+    required bool playsAlone,
+  }) {
+    int tricks = consecutiveTop;
+
+    // Rois "proteges" : >= 3 cartes dans la couleur
+    int safeKings = 0;
+    for (final king in kings) {
+      final len = suitLengths[king.suit] ?? 0;
+      if (len >= 3) safeKings++;
+    }
+    tricks += safeKings;
+
+    // Chicanes -> coupes possibles (limite par le nombre d'atouts)
+    final voidsCount = suitLengths.entries
         .where((e) => e.key != TarotSuit.atout && e.value == 0)
         .length;
+    final extraTrumps = (trumpCount - consecutiveTop).clamp(0, 99);
+    tricks += (voidsCount * 2).clamp(0, extraTrumps);
 
-    // === Garde Contre ===
-    if (trumpCount >= 15 && boutCount >= 2) {
+    // Singletons d'as ou de figure haute (compte deja dans les Rois)
+    return tricks;
+  }
+
+  // ===================== RECOMMANDATION =====================
+
+  /// Recommande un contrat selon les **points de la main** et les seuils
+  /// ajustes au contexte (nombre de joueurs, solo/equipier).
+  ///
+  /// Inspiration : https://www.le-tarot.fr/quel-contrat-choisir/
+  ///
+  /// En plus du seuil de points, on applique des **garde-fous strategiques** :
+  /// - Garde Contre requiert le 21 ET 2 bouts (sinon main fragile)
+  /// - Garde Sans requiert au moins 2 atouts maitres en sequence
+  /// - Petite avec Petit non protege baisse fortement la confiance
+  static ContractRecommendation _recommendContract({
+    required HandPoints points,
+    required PointsThresholds thresholds,
+    required List<TarotCard> hand,
+    required Map<TarotSuit, int> suitLengths,
+    required int consecutiveTop,
+    required int kingCount,
+    required PlayerCount playerCount,
+    required bool playsAlone,
+    required KingCallStrategy? kingCallStrategy,
+  }) {
+    final hasPetit = hand.any((c) => c.isPetit);
+    final has21 = hand.any((c) => c.is21);
+    final boutCount = hand.where((c) => c.isBout).length;
+    final trumpCount = hand.where((c) => c.isTrump && !c.isExcuse).length +
+        (hand.any((c) => c.isExcuse) ? 1 : 0);
+    final trumpsAbovePetit = hand
+        .where((c) => c.isTrump && !c.isExcuse && c.rank > 1)
+        .length;
+    final petitProtected = !hasPetit || trumpsAbovePetit >= 5;
+    final total = points.total;
+
+    // Confidence : position du score dans la plage du seuil au max (~110).
+    double confidenceFor(int floor) =>
+        ((total - floor) / (110 - floor)).clamp(0.2, 0.95);
+
+    // ===== Garde Contre =====
+    // Condition : seuil + 21 + 2 bouts + au moins 3 atouts maitres
+    if (total >= thresholds.gardeContre &&
+        has21 &&
+        boutCount >= 2 &&
+        consecutiveTop >= 3) {
       return ContractRecommendation(
         contract: ContractType.gardeContre,
-        confidence: (strength / 100).clamp(0.5, 1.0),
-        reasoning:
-            'Main exceptionnelle : $trumpCount atouts et $boutCount bout(s). '
-            'Vous dominez largement le jeu d\'atout.',
+        confidence: confidenceFor(thresholds.gardeContre),
+        reasoning: _buildReasoning(
+          points: points,
+          thresholds: thresholds,
+          trumpCount: trumpCount,
+          boutCount: boutCount,
+          consecutiveTop: consecutiveTop,
+          kingCount: kingCount,
+          playerCount: playerCount,
+          playsAlone: playsAlone,
+          kingCallStrategy: kingCallStrategy,
+          extra:
+              'Main exceptionnelle ($total pts >= ${thresholds.gardeContre}). '
+              'Pas de chien, et le chien est CONTRE vous.',
+        ),
       );
     }
 
-    // === Garde Sans ===
-    if (trumpCount >= 13 && boutCount >= 2) {
-      final conf = ((strength - 10) / 90).clamp(0.3, 0.95);
+    // ===== Garde Sans =====
+    // Condition : seuil + 2 bouts + au moins 2 atouts maitres en sequence
+    if (total >= thresholds.gardeSans &&
+        boutCount >= 2 &&
+        consecutiveTop >= 2) {
       return ContractRecommendation(
         contract: ContractType.gardeSans,
-        confidence: conf,
-        reasoning:
-            'Main très forte : $trumpCount atouts avec $boutCount bout(s). '
-            'Pas besoin du chien pour assurer.',
+        confidence: confidenceFor(thresholds.gardeSans),
+        reasoning: _buildReasoning(
+          points: points,
+          thresholds: thresholds,
+          trumpCount: trumpCount,
+          boutCount: boutCount,
+          consecutiveTop: consecutiveTop,
+          kingCount: kingCount,
+          playerCount: playerCount,
+          playsAlone: playsAlone,
+          kingCallStrategy: kingCallStrategy,
+          extra:
+              'Pas besoin du chien ($total pts >= ${thresholds.gardeSans}). '
+              'Vous controlez le jeu d\'atout.',
+        ),
       );
     }
 
-    // === Garde ===
-    if (strength >= 55 || (trumpCount >= 10 && boutCount >= 2)) {
-      final conf = ((strength - 30) / 50).clamp(0.3, 0.9);
-      String reason;
-      if (trumpCount >= 10) {
-        reason = '$trumpCount atouts solides';
-        if (boutCount >= 2) reason += ' avec $boutCount bouts';
-        if (kingCount >= 2) reason += ' et $kingCount Rois';
-        reason += '. Le chien pourrait améliorer votre jeu.';
-      } else {
-        reason = 'Main équilibrée avec de bons points. '
-            'Le chien peut compléter votre jeu.';
-      }
+    // ===== Garde =====
+    if (total >= thresholds.garde) {
       return ContractRecommendation(
         contract: ContractType.garde,
-        confidence: conf,
-        reasoning: reason,
+        confidence: confidenceFor(thresholds.garde),
+        reasoning: _buildReasoning(
+          points: points,
+          thresholds: thresholds,
+          trumpCount: trumpCount,
+          boutCount: boutCount,
+          consecutiveTop: consecutiveTop,
+          kingCount: kingCount,
+          playerCount: playerCount,
+          playsAlone: playsAlone,
+          kingCallStrategy: kingCallStrategy,
+          extra:
+              '$total pts >= ${thresholds.garde}. Le chien peut completer '
+              'votre jeu (a vous, mais contre vous en cas de chute).',
+        ),
       );
     }
 
-    // === Petite ===
-    if (strength >= 35 || (trumpCount >= 7 && boutCount >= 1)) {
-      final conf = ((strength - 20) / 40).clamp(0.2, 0.8);
-      String reason;
-      if (trumpCount >= 8) {
-        reason = '$trumpCount atouts, ';
-      } else {
-        reason = 'Jeu modeste ($trumpCount atouts), ';
-      }
-      if (boutCount >= 1) {
-        reason += '$boutCount bout(s) pour réduire l\'objectif. ';
-      }
-      if (voids > 0) {
-        reason += 'Vos coupes permettent de contrôler le jeu. ';
-      }
-      if (!petitProtected && hasPetit) {
-        reason += '⚠️ Attention, votre Petit est peu protégé. ';
-      }
-      reason += 'Prenez en Petite, le chien sera déterminant.';
+    // ===== Petite =====
+    if (total >= thresholds.petite) {
+      final voids = suitLengths.entries
+          .where((e) => e.key != TarotSuit.atout && e.value == 0)
+          .length;
+
+      String extra = '$total pts >= ${thresholds.petite}. Le chien donnera '
+          '${switch (playerCount) {
+        PlayerCount.five => 3,
+        PlayerCount.four => 6,
+        PlayerCount.three => 6,
+      }} cartes en plus.';
+
+      if (voids > 0) extra += ' $voids chicane(s) pour couper.';
+      if (hasPetit && !petitProtected) extra += ' ⚠️ Petit peu protege !';
+
+      // Confidence reduite si Petit non protege
+      var conf = confidenceFor(thresholds.petite);
+      if (hasPetit && !petitProtected) conf = (conf - 0.15).clamp(0.2, 0.95);
 
       return ContractRecommendation(
         contract: ContractType.petite,
         confidence: conf,
-        reasoning: reason,
+        reasoning: _buildReasoning(
+          points: points,
+          thresholds: thresholds,
+          trumpCount: trumpCount,
+          boutCount: boutCount,
+          consecutiveTop: consecutiveTop,
+          kingCount: kingCount,
+          playerCount: playerCount,
+          playsAlone: playsAlone,
+          kingCallStrategy: kingCallStrategy,
+          extra: extra,
+        ),
       );
     }
 
-    // === Passe ===
-    String reason = 'Main faible';
-    if (trumpCount < 6) {
-      reason += ' ($trumpCount atouts seulement)';
+    // ===== Passe =====
+    String reason =
+        'Main faible : $total pts (seuil Petite : ${thresholds.petite}).';
+    if (playsAlone && playerCount == PlayerCount.five) {
+      reason += ' Vous jouez SEUL (4 Rois -> Dame appelee).';
+    } else if (!playsAlone && playerCount == PlayerCount.five) {
+      reason += ' Meme avec un equipier, votre main n\'a pas de quoi prendre.';
     }
-    if (boutCount == 0) {
-      reason += ', aucun bout';
-    }
-    reason += '. Mieux vaut défendre sur cette donne.';
-    if (hasPetit && !petitProtected) {
-      reason += ' ⚠️ Petit en danger !';
-    }
+    if (boutCount == 0) reason += ' Aucun bout.';
+    if (consecutiveTop == 0) reason += ' Pas d\'atout maitre.';
+    if (hasPetit && !petitProtected) reason += ' ⚠️ Petit en danger !';
+    reason += ' Mieux vaut defendre.';
+
+    // Confidence du Passe : plus le total est bas, plus on est sur.
+    final passeConf =
+        ((thresholds.petite - total) / thresholds.petite).clamp(0.5, 0.95);
 
     return ContractRecommendation(
       contract: ContractType.passe,
-      confidence: ((100 - strength) / 100).clamp(0.5, 1.0),
+      confidence: passeConf,
       reasoning: reason,
     );
   }
 
-  /// Génère des conseils de jeu contextuels.
+  /// Construit le texte de justification de la recommandation.
+  static String _buildReasoning({
+    required HandPoints points,
+    required PointsThresholds thresholds,
+    required int trumpCount,
+    required int boutCount,
+    required int consecutiveTop,
+    required int kingCount,
+    required PlayerCount playerCount,
+    required bool playsAlone,
+    required KingCallStrategy? kingCallStrategy,
+    required String extra,
+  }) {
+    final buf = StringBuffer();
+    buf.write('$trumpCount atouts');
+    if (boutCount > 0) buf.write(', $boutCount bout(s)');
+    if (consecutiveTop >= 2) {
+      buf.write(', $consecutiveTop atouts maitres en sequence');
+    } else if (consecutiveTop == 1) {
+      buf.write(', le 21 en main');
+    }
+    if (kingCount >= 2) buf.write(', $kingCount Rois');
+    buf.write('. ');
+
+    if (playerCount == PlayerCount.five) {
+      if (playsAlone) {
+        buf.write('⚠️ Vous jouerez SEUL (Dame appelee). ');
+      } else if (kingCallStrategy?.suitToCall != null) {
+        buf.write(
+            'Appel conseille : Roi de ${kingCallStrategy!.suitToCall!.label}. ');
+      }
+    }
+
+    buf.write(extra);
+    return buf.toString();
+  }
+
+  // ===================== CONSEILS =====================
+
   static List<String> _generateTips({
     required List<TarotCard> hand,
     required int trumpCount,
@@ -242,94 +663,162 @@ class HandEvaluator {
     required List<TarotCard> kings,
     required Map<TarotSuit, int> suitLengths,
     required ContractRecommendation recommendation,
+    required int consecutiveTop,
+    required int highTrumps,
+    required PlayerCount playerCount,
+    required bool playsAlone,
+    required KingCallStrategy? kingCallStrategy,
   }) {
     final tips = <String>[];
     final hasPetit = bouts.any((c) => c.isPetit);
     final has21 = bouts.any((c) => c.is21);
     final hasExcuse = bouts.any((c) => c.isExcuse);
+    final voids = suitLengths.entries
+        .where((e) => e.key != TarotSuit.atout && e.value == 0)
+        .toList();
 
+    // === Cas PASSE : conseils de defense ===
     if (recommendation.contract == ContractType.passe) {
-      // Conseils de défense
       if (hasPetit) {
-        tips.add(
-            '🎯 En défense, essayez de sauver votre Petit au dernier moment.');
+        tips.add('🎯 Si vous etes au Petit, sauvez-le au dernier moment '
+            '(idealement sous une coupe d\'un partenaire).');
       }
-      tips.add('🛡️ Coupez dès que possible pour empêcher le preneur de '
-          'faire ses points.');
+      if (has21) {
+        tips.add('💎 Vous avez le 21 : il prendra le Petit du preneur si '
+            'celui-ci le sort. Restez patient.');
+      }
+      if (kings.length >= 2) {
+        tips.add('👑 ${kings.length} Rois en defense : faites-les passer '
+            'dans des plis ou un coequipier coupe.');
+      }
+      if (voids.isNotEmpty) {
+        final suitNames = voids.map((e) => e.key.label).join(' et ');
+        tips.add(
+            '✂️ Chicane a $suitNames : excellent pour couper les Rois du '
+            'preneur ou de son equipier.');
+      }
+      tips.add('🛡️ En defense, communiquez par vos cartes : signaux courts '
+          '(petite carte = j\'ai), longs (carte forte = je n\'ai pas).');
       return tips;
     }
 
-    // Conseils d'attaque
-    if (trumpCount >= 10) {
-      tips.add('💥 Jouez atout d\'entrée pour chasser les atouts adverses '
-          'et libérer vos Rois.');
+    // === Cas PRISE : conseils d'attaque ===
+
+    // --- Conseils specifiques au tarot a 5J ---
+    if (playerCount == PlayerCount.five) {
+      if (kingCallStrategy != null) {
+        if (kingCallStrategy.mustCallQueen) {
+          tips.add('♛ Vous avez les 4 Rois -> appelez une Dame. Choisissez '
+              'la couleur la plus utile (longue couleur ou chicane). Jouez '
+              'comme si vous etiez SEUL.');
+        } else if (kingCallStrategy.suitToCall != null) {
+          tips.add('🤝 ${kingCallStrategy.explanation}');
+        } else {
+          tips.add('🤝 ${kingCallStrategy.explanation}');
+        }
+      }
     }
 
+    // --- Strategie d'attaque atout ---
+    final shouldPullTrumps = trumpCount >=
+        (playerCount == PlayerCount.three
+            ? 12
+            : playerCount == PlayerCount.four
+                ? 9
+                : 7);
+
+    if (shouldPullTrumps && consecutiveTop >= 2) {
+      tips.add('💥 Attaquez atout d\'entree (vos $consecutiveTop atouts '
+          'maitres) pour chasser ceux des adversaires et liberer vos Rois '
+          'et coupes.');
+    } else if (consecutiveTop >= 1) {
+      tips.add('🎯 Vous avez le 21 : utilisez-le pour capturer une carte '
+          'de valeur (Roi, Dame, Bout) au bon moment.');
+    } else if (trumpCount >= 6) {
+      tips.add('⏳ Pas d\'atout maitre garanti : evitez d\'attaquer atout, '
+          'laissez la defense vider les hauts atouts d\'abord.');
+    }
+
+    // --- Petit ---
     if (hasPetit) {
-      if (trumpCount >= 10) {
-        tips.add('🎯 Avec $trumpCount atouts, tentez le Petit au bout ! '
-            'Jouez-le au dernier pli pour +10 points.');
+      final trumpsAbovePetit = hand
+          .where((c) => c.isTrump && !c.isExcuse && c.rank > 1)
+          .length;
+      if (trumpsAbovePetit >= 8) {
+        tips.add('🏆 Tentez le Petit au bout ! Avec $trumpsAbovePetit '
+            'atouts au-dessus, gardez-le pour le dernier pli (+10 pts).');
+      } else if (trumpsAbovePetit >= 5) {
+        tips.add('🛡️ Petit protege ($trumpsAbovePetit atouts au-dessus) : '
+            'possible petit au bout si la partie va a son terme.');
       } else {
-        tips.add('⚠️ Protégez votre Petit ! Avec seulement $trumpCount atouts, '
-            'ne le jouez pas trop tôt.');
+        tips.add('⚠️ Petit peu protege (seulement $trumpsAbovePetit '
+            'atouts au-dessus) : sortez-le tot quand la defense joue ses '
+            'atouts hauts, ou conservez-le selon le rythme.');
       }
     }
 
-    if (has21) {
-      tips.add('💎 Le 21 est votre carte maîtresse. '
-          'Utilisez-le pour capturer des cartes de valeur.');
+    // --- 21 ---
+    if (has21 && consecutiveTop >= 2) {
+      tips.add('💎 21 + sequence : vous controlez la fin de partie. '
+          'Vos derniers atouts forceront les Rois adverses.');
     }
 
+    // --- Excuse ---
     if (hasExcuse) {
-      tips.add('🃏 Gardez l\'Excuse pour la fin si possible — '
-          'elle vous sauve d\'un pli difficile sans perdre de points.');
+      tips.add('🃏 Gardez l\'Excuse pour un pli ou vous risquez de perdre '
+          'une carte de valeur (Roi en danger, plis adverse fort).');
     }
 
-    // Coupes
-    final voidSuits = suitLengths.entries
-        .where((e) => e.key != TarotSuit.atout && e.value == 0)
-        .map((e) => e.key)
-        .toList();
-    if (voidSuits.isNotEmpty) {
-      final suitNames = voidSuits.map((s) => s.label).join(' et ');
-      tips.add('✂️ Vous êtes chicane à $suitNames — '
-          'profitez-en pour couper et récupérer des points.');
+    // --- Chicanes ---
+    if (voids.isNotEmpty) {
+      final suitNames = voids.map((e) => e.key.label).join(' et ');
+      tips.add('✂️ Chicane a $suitNames : utilisez vos atouts moyens '
+          '(12-17) pour couper les Rois et Dames adverses.');
     }
 
-    // Rois
-    final lonelykings = kings.where((k) {
-      final suitLength = suitLengths[k.suit] ?? 0;
-      return suitLength <= 2;
+    // --- Rois fragiles ---
+    final fragileKings = kings.where((k) {
+      final len = suitLengths[k.suit] ?? 0;
+      return len <= 2;
     }).toList();
-    if (lonelykings.isNotEmpty) {
-      for (final king in lonelykings) {
-        tips.add('👑 Roi de ${king.suit.label} peu protégé '
-            '(${suitLengths[king.suit]} cartes) — '
-            'jouez-le vite ou chassez les atouts d\'abord.');
-      }
+    for (final king in fragileKings) {
+      tips.add('👑 Roi de ${king.suit.label} peu protege '
+          '(${suitLengths[king.suit]} cartes) : chassez les atouts AVANT '
+          'de le sortir, ou laissez-le pour un pli de fin.');
     }
 
-    // Longues couleurs
+    // --- Longues couleurs (sans Roi) ---
     for (final entry in suitLengths.entries) {
-      if (entry.key != TarotSuit.atout && entry.value >= 6) {
-        tips.add('📏 Longue à ${entry.key.label} (${entry.value} cartes) — '
-            'une fois les atouts chassés, vos petites cartes '
-            'deviennent maîtresses.');
+      if (entry.key == TarotSuit.atout) continue;
+      if (entry.value >= 5) {
+        final hasKingInSuit =
+            hand.any((c) => c.suit == entry.key && c.isKing);
+        if (!hasKingInSuit) {
+          tips.add('📏 Longue a ${entry.key.label} (${entry.value} cartes) '
+              'sans Roi : une fois les atouts tires, les petites cartes '
+              'deviennent maitresses.');
+        }
       }
     }
 
-    // Poignée
-    if (trumpCount >= 10) {
-      final handleType = trumpCount >= 15
+    // --- Poignee ---
+    final seuils = HandleThresholds(playerCount);
+    if (trumpCount >= seuils.simple) {
+      final type = trumpCount >= seuils.triple
           ? 'Triple'
-          : trumpCount >= 13
+          : trumpCount >= seuils.doubleSeuil
               ? 'Double'
               : 'Simple';
-      tips.add('✋ Vous pouvez déclarer une poignée $handleType '
-          '($trumpCount atouts) pour un bonus !'
-          ' Montrez-la en début de partie.');
+      final bonus = trumpCount >= seuils.triple
+          ? 40
+          : trumpCount >= seuils.doubleSeuil
+              ? 30
+              : 20;
+      tips.add('✋ Poignee $type possible (+$bonus pts) : annoncez avant le '
+          '1er pli et etalez l\'ensemble exact des atouts requis.');
     }
 
     return tips;
   }
 }
+
