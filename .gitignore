@@ -18,6 +18,11 @@ Runner.xcworkspace/
 # IDE
 .idea/
 .vscode/
+*.iml
+
+# Flutter generated
+.flutter-plugins
+.flutter-plugins-dependencies
 
 # Misc
 .DS_Store
