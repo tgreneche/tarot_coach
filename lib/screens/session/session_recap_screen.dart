@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../models/session.dart';
-import '../../models/donne.dart';
+import '../../services/session_import_export_service.dart';
 
 /// \u00c9cran r\u00e9capitulatif de fin de session -- classement + stats fun.
 class SessionRecapScreen extends StatelessWidget {
@@ -17,7 +17,28 @@ class SessionRecapScreen extends StatelessWidget {
     final taux = session.tauxReussiteParJoueur;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('R\u00e9capitulatif')),
+      appBar: AppBar(
+        title: const Text('R\u00e9capitulatif'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.ios_share),
+            tooltip: 'Exporter en JSON',
+            onPressed: () async {
+              try {
+                await SessionImportExportService.exporter(
+                  [session],
+                  subject: 'Session Coach Tarot',
+                );
+              } catch (e) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Export impossible : $e')),
+                );
+              }
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

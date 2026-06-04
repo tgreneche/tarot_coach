@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../models/session.dart';
+import '../../services/session_import_export_service.dart';
 import '../../services/storage_service.dart';
 import 'session_recap_screen.dart';
 
@@ -90,6 +91,49 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
     }
   }
 
+  Future<void> _exporterTout() async {
+    if (_sessions.isEmpty) return;
+    try {
+      await SessionImportExportService.exporter(_sessions);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export impossible : $e')),
+      );
+    }
+  }
+
+  Future<void> _exporterUne(Session session) async {
+    try {
+      await SessionImportExportService.exporter(
+        [session],
+        filename:
+            'tarot_coach_${session.nbJoueurs}j_${session.dateCreation.millisecondsSinceEpoch}.json',
+        subject: 'Session Coach Tarot du '
+            '${_formatDate(session.dateCreation)}',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Export impossible : $e')),
+      );
+    }
+  }
+
+  Future<void> _importer() async {
+    final result =
+        await SessionImportExportService.importerDepuisFichier();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result.summary)),
+    );
+    if (result.success && result.added > 0) {
+      setState(() {
+        _sessions = StorageService.instance.getHistorique();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppTheme.of(context);
@@ -98,6 +142,17 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
       appBar: AppBar(
         title: const Text('Historique des sessions'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: 'Importer depuis un fichier',
+            onPressed: _importer,
+          ),
+          if (_sessions.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.ios_share),
+              tooltip: 'Exporter toutes les sessions',
+              onPressed: _exporterTout,
+            ),
           if (_sessions.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_sweep),
@@ -174,6 +229,13 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                                   '${session.nbJoueurs}J \u2014 ${session.nbDonnesJouees} donnes',
                                   style: TextStyle(fontSize: 11, color: t.textSecondary),
                                 ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.ios_share,
+                                    size: 18, color: t.textSecondary),
+                                tooltip: 'Exporter cette session',
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () => _exporterUne(session),
                               ),
                             ],
                           ),

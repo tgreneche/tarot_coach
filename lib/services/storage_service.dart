@@ -17,8 +17,13 @@ class StorageService {
   SharedPreferences? _prefs;
 
   /// Initialise le service. À appeler au démarrage de l'app.
+  ///
+  /// Récupère systématiquement l'instance courante de [SharedPreferences].
+  /// En production, init() est appelé une fois au démarrage ; en test,
+  /// chaque setUp peut le rappeler après `setMockInitialValues({})` pour
+  /// repartir sur une instance vierge.
   Future<void> init() async {
-    _prefs ??= await SharedPreferences.getInstance();
+    _prefs = await SharedPreferences.getInstance();
   }
 
   SharedPreferences get _p {
