@@ -10,6 +10,7 @@ import 'session/new_session_screen.dart';
 import 'session/session_board_screen.dart';
 import 'session/session_history_screen.dart';
 import 'session/players_screen.dart';
+import 'session/player_stats_screen.dart';
 
 /// Écran d'accueil avec navigation principale.
 class HomeScreen extends StatefulWidget {
@@ -205,6 +206,12 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              _SmallFeatureCard(
+                icon: Icons.bar_chart,
+                title: 'Statistiques joueurs',
+                onTap: () => _pushAndRefresh(const PlayerStatsScreen()),
               ),
               const SizedBox(height: 24),
 
