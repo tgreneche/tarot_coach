@@ -1,0 +1,18 @@
+# Modele de configuration de signature release Android.
+# Copier ce fichier en android/key.properties et le remplir avec
+# vos vraies valeurs. NE JAMAIS commiter key.properties ni le .jks
+# (cf. .gitignore racine et android/.gitignore).
+#
+# 1) Generer un keystore (une seule fois, conservez-le precieusement) :
+#    keytool -genkey -v -keystore ~/coach-tarot-upload.jks \
+#        -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# 2) Renseigner ci-dessous le chemin ABSOLU vers ce keystore.
+#
+# 3) `flutter build appbundle --release` produira un AAB signe pret pour
+#    le Play Store (build/app/outputs/bundle/release/app-release.aab).
+
+storePassword=CHANGEZ_MOI
+keyPassword=CHANGEZ_MOI
+keyAlias=upload
+storeFile=/chemin/absolu/vers/coach-tarot-upload.jks
