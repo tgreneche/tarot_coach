@@ -36,7 +36,8 @@ android {
 
     defaultConfig {
         applicationId = "fr.coachtarot.tarot_coach"
-        minSdk = flutter.minSdkVersion
+        // google_mobile_ads 5.x exige minSdk >= 23
+        minSdk = maxOf(23, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

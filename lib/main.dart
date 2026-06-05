@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'screens/home_screen.dart';
-import 'widgets/ad_banner_placeholder.dart';
+import 'services/premium_service.dart';
 import 'services/storage_service.dart';
+import 'widgets/ad_banner.dart';
 
 late ThemeProvider themeProvider;
+late PremiumService premiumService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +22,15 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   themeProvider = ThemeProvider();
   await themeProvider.init(prefs);
+
+  // Initialiser le SDK AdMob et le service premium en parallèle.
+  // PremiumService doit être init avant le runApp pour éviter un flash
+  // de pub si l'utilisateur est déjà premium.
+  premiumService = PremiumService();
+  await Future.wait([
+    MobileAds.instance.initialize(),
+    premiumService.init(),
+  ]);
 
   runApp(const TarotCoachApp());
 }
@@ -213,7 +225,7 @@ class _OrientationWrapperState extends State<_OrientationWrapper> {
     return Column(
       children: [
         Expanded(child: widget.child),
-        const AdBannerPlaceholder(),
+        AdBanner(premium: premiumService),
       ],
     );
   }

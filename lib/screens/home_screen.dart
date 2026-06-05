@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../main.dart' show premiumService;
 import '../models/session.dart';
 import '../services/storage_service.dart';
-import 'player_count_screen.dart';
-import 'trump_tracker_screen.dart';
+import '../theme/app_theme.dart';
 import 'about_screen.dart';
+import 'player_count_screen.dart';
+import 'premium_screen.dart';
 import 'rules_screen.dart';
 import 'session/new_session_screen.dart';
+import 'session/player_stats_screen.dart';
+import 'session/players_screen.dart';
 import 'session/session_board_screen.dart';
 import 'session/session_history_screen.dart';
-import 'session/players_screen.dart';
-import 'session/player_stats_screen.dart';
+import 'trump_tracker_screen.dart';
 
 /// Écran d'accueil avec navigation principale.
 class HomeScreen extends StatefulWidget {
@@ -28,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    premiumService.addListener(_onPremiumChanged);
     // Lecture initiale synchrone (sans setState pendant initState)
     _sessionEnCours = StorageService.instance.getSessionEnCours();
   }
@@ -35,7 +38,12 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    premiumService.removeListener(_onPremiumChanged);
     super.dispose();
+  }
+
+  void _onPremiumChanged() {
+    if (mounted) setState(() {});
   }
 
   /// Quand l'app revient au premier plan, on recharge la session
@@ -213,7 +221,33 @@ class _HomeScreenState extends State<HomeScreen>
                 title: 'Statistiques joueurs',
                 onTap: () => _pushAndRefresh(const PlayerStatsScreen()),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // === Premium (masqué si déjà acheté) ===
+              if (!premiumService.isPremium) ...[
+                Center(
+                  child: ActionChip(
+                    avatar: Icon(Icons.workspace_premium,
+                        size: 18, color: t.gold),
+                    label: Text(
+                      'Passer Premium • ${premiumService.displayPrice}',
+                      style: t.bodyFont(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: t.gold,
+                      ),
+                    ),
+                    shape: StadiumBorder(
+                      side: BorderSide(color: t.gold.withValues(alpha: 0.4)),
+                    ),
+                    backgroundColor: t.gold.withValues(alpha: 0.06),
+                    onPressed: () => _pushAndRefresh(
+                      PremiumScreen(premium: premiumService),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
 
               // Lien À propos
               Center(

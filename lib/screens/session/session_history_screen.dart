@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
+import '../../main.dart' show premiumService;
 import '../../models/session.dart';
 import '../../services/session_import_export_service.dart';
 import '../../services/storage_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/ad_banner.dart';
 import 'session_recap_screen.dart';
 
 /// Historique des sessions cl\u00f4tur\u00e9es (20 derni\u00e8res).
@@ -161,6 +163,7 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
             ),
         ],
       ),
+      bottomNavigationBar: AdBanner(premium: premiumService),
       body: _sessions.isEmpty
           ? Center(
               child: Column(
