@@ -3,13 +3,13 @@
         android:label="Coach Tarot"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <!-- AdMob App ID. En debug, l'app ID de test officiel Google evite
-             toute initialisation reelle d'AdMob. A remplacer par le vrai ID
-             (admob.google.com -> ton app -> Parametres -> App ID) avant
-             le 1er publish Play Store. -->
+        <!-- AdMob App ID Coach Tarot (production). En debug, les unites
+             publicitaires utilisent les IDs de test officiels Google
+             (cf. lib/services/ads_config.dart) : cet App ID prod ne
+             risque donc pas de generer de clics frauduleux en dev. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-8309664418375986~8884406346"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

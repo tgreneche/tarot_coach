@@ -19,10 +19,12 @@ class AdsConfig {
   static const _testBannerAndroid = 'ca-app-pub-3940256099942544/6300978111';
   static const _testBannerIos = 'ca-app-pub-3940256099942544/2934735716';
 
-  // === IDs de production : à remplir après création du compte AdMob ===
-  // TODO(release) : remplacer par tes vrais IDs avant de publier.
-  // Format : ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
-  static const _prodBannerAndroid = 'ca-app-pub-0000000000000000/0000000000';
+  // === IDs de production ===
+  // App ID Coach Tarot : ca-app-pub-8309664418375986~8884406346
+  // (l'App ID est declare dans AndroidManifest.xml, pas ici).
+  static const _prodBannerAndroid = 'ca-app-pub-8309664418375986/2612991554';
+  // iOS non cible pour l'instant. Si l'app sort sur iOS, creer une unite
+  // Banner cote AdMob et remplacer ici.
   static const _prodBannerIos = 'ca-app-pub-0000000000000000/0000000000';
 
   /// ID de l'unité bannière à utiliser selon plateforme + mode build.
@@ -33,9 +35,9 @@ class AdsConfig {
     return Platform.isIOS ? _prodBannerIos : _prodBannerAndroid;
   }
 
-  /// Indique si les IDs de prod ont bien été remplacés.
-  /// Utile pour un assert au démarrage en release.
+  /// Indique si l'ID Android de prod a bien été remplacé.
+  /// Utile pour un assert au démarrage en release. iOS exclu tant que
+  /// l'app n'est pas portée sur iOS.
   static bool get prodIdsConfigured =>
-      !_prodBannerAndroid.contains('0000000000000000') &&
-      !_prodBannerIos.contains('0000000000000000');
+      !_prodBannerAndroid.contains('0000000000000000');
 }
