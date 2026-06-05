@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coach Tarot — L'assistant intelligent pour vos parties de Tarot</title>
+  <meta name="description" content="Coach Tarot : l'application qui gère le score, analyse votre main et suit vos statistiques sur le Tarot français. Pour 3 à 6 joueurs.">
+  <style>
+    :root {
+      --primary: #1B5E20;
+      --primary-dark: #0D3B0F;
+      --gold: #D4A437;
+      --bg: #faf8f3;
+      --text: #1a1a1a;
+      --muted: #666;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 80px 24px 100px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(212,164,55,0.08) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .hero h1 {
+      font-family: Georgia, "Playfair Display", serif;
+      font-size: 56px;
+      margin: 0 0 16px;
+      position: relative;
+    }
+    .hero .tagline {
+      font-size: 20px;
+      opacity: 0.9;
+      margin: 0 auto 32px;
+      max-width: 640px;
+      position: relative;
+    }
+    .hero .accent {
+      display: inline-block;
+      width: 80px;
+      height: 4px;
+      background: var(--gold);
+      border-radius: 2px;
+      margin: 0 auto 24px;
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 32px;
+      position: relative;
+    }
+    .badge {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(212,164,55,0.5);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    main {
+      max-width: 1100px;
+      margin: -60px auto 60px;
+      padding: 0 24px;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+    .card {
+      background: white;
+      padding: 28px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .card .icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      color: var(--primary);
+      font-size: 18px;
+    }
+    .card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .resources {
+      background: white;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    .resources h2 {
+      color: var(--primary);
+      margin-top: 0;
+      border-left: 4px solid var(--gold);
+      padding-left: 12px;
+    }
+    .resources ul { padding-left: 24px; }
+    .resources li { margin: 8px 0; }
+    .resources a { color: var(--primary); font-weight: 600; }
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    footer a { color: var(--primary); }
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 36px; }
+      .hero .tagline { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <span class="accent"></span>
+    <h1>🃏 Coach Tarot</h1>
+    <p class="tagline">L'assistant intelligent pour vos parties de Tarot français entre amis ou en famille.</p>
+    <div class="badges">
+      <span class="badge">🎯 Analyse de main</span>
+      <span class="badge">📊 Scoring automatique</span>
+      <span class="badge">📈 Statistiques joueurs</span>
+      <span class="badge">🇫🇷 Règles FFT</span>
+    </div>
+  </div>
+
+  <main>
+    <div class="features">
+      <div class="card">
+        <div class="icon">🎯</div>
+        <h3>Analyse intelligente</h3>
+        <p>Sélectionnez vos 18 cartes et recevez instantanément une recommandation de contrat avec indice de confiance.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h3>Scoring automatique</h3>
+        <p>Petit au bout, poignées, chelems : tout est calculé selon les règles FFT, à 3, 4, 5 ou 6 joueurs.</p>
+      </div>
+      <div class="card">
+        <div class="icon">👥</div>
+        <h3>Carnet de joueurs</h3>
+        <p>Vos partenaires de jeu mémorisés. Les statistiques se cumulent au fil des sessions.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔒</div>
+        <h3>100 % hors ligne</h3>
+        <p>Toutes les données restent sur votre téléphone. Aucun compte, aucun tracking.</p>
+      </div>
+    </div>
+
+    <div class="resources">
+      <h2>Liens utiles</h2>
+      <ul>
+        <li><a href="privacy.html">Politique de confidentialité</a> — comment l'app traite vos données</li>
+        <li><a href="https://github.com/tgreneche/tarot_coach">Code source sur GitHub</a> — projet open</li>
+        <li><a href="mailto:coachtarot@gmail.com">coachtarot@gmail.com</a> — support et retours</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>
+    Coach Tarot — Développé en France 🇫🇷 par Gregre<br>
+    <small>Aucune affiliation avec la Fédération Française de Tarot.</small>
+  </footer>
+</body>
+</html>
