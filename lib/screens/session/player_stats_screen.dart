@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../main.dart' show premiumService;
 import '../../models/donne.dart';
 import '../../services/stats_service.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/ad_banner.dart';
 
 /// Statistiques agrégées par joueur sur tout l'historique des sessions.
 class PlayerStatsScreen extends StatefulWidget {
@@ -29,6 +31,7 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
     final t = AppTheme.of(context);
 
     return Scaffold(
+      bottomNavigationBar: AdBanner(premium: premiumService),
       appBar: AppBar(title: const Text('Statistiques joueurs')),
       body: _stats.isEmpty
           ? Center(

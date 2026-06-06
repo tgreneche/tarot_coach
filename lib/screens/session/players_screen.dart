@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
+import '../../main.dart' show premiumService;
 import '../../models/player.dart';
 import '../../services/storage_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/ad_banner.dart';
 
 /// Carnet de joueurs -- CRUD rapide.
 class PlayersScreen extends StatefulWidget {
@@ -238,6 +240,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
         _selectedIds.length == widget.nbJoueursRequis;
 
     return Scaffold(
+      bottomNavigationBar: AdBanner(premium: premiumService),
       appBar: AppBar(
         title: Text(widget.selectionMode
             ? 'S\u00e9lectionner ${widget.nbJoueursRequis} joueurs'

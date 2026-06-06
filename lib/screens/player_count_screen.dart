@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
+import '../main.dart' show premiumService;
 import '../models/game.dart';
+import '../theme/app_theme.dart';
+import '../widgets/ad_banner.dart';
 import 'card_selection_screen.dart';
 
 /// Ecran intermediaire pour choisir le nombre de joueurs
@@ -13,6 +15,7 @@ class PlayerCountScreen extends StatelessWidget {
     final t = AppTheme.of(context);
 
     return Scaffold(
+      bottomNavigationBar: AdBanner(premium: premiumService),
       appBar: AppBar(title: const Text('Type de partie')),
       body: SafeArea(
         child: Padding(

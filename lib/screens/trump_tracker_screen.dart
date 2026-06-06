@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 import '../engine/trump_tracker.dart';
+import '../main.dart' show premiumService;
+import '../theme/app_theme.dart';
+import '../widgets/ad_banner.dart';
 
 /// Ecran de suivi des atouts joues pendant la partie.
 class TrumpTrackerScreen extends StatefulWidget {
@@ -52,6 +54,7 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
     final t = AppTheme.of(context);
 
     return Scaffold(
+      bottomNavigationBar: AdBanner(premium: premiumService),
       appBar: AppBar(
         title: const Text('Suivi des atouts'),
         actions: [
