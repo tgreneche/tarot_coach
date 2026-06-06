@@ -87,12 +87,25 @@ class _AdBannerState extends State<AdBanner> {
     if (widget.premium.isPremium || _ad == null || !_loaded) {
       return const SizedBox.shrink();
     }
-    return SafeArea(
-      top: false,
-      child: SizedBox(
-        width: _ad!.size.width.toDouble(),
-        height: _ad!.size.height.toDouble(),
-        child: AdWidget(ad: _ad!),
+    // Material + Center : la banniere (320x50) est centree horizontalement
+    // sur un fond uni qui herite de la surface du theme. Evite l'effet de
+    // "fond noir" visible sur certains ecrans (home notamment) ou la
+    // banniere n'est pas dans un Scaffold.bottomNavigationBar.
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: _ad!.size.height.toDouble(),
+          child: Center(
+            child: SizedBox(
+              width: _ad!.size.width.toDouble(),
+              height: _ad!.size.height.toDouble(),
+              child: AdWidget(ad: _ad!),
+            ),
+          ),
+        ),
       ),
     );
   }
