@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../main.dart' show premiumService;
 import '../../models/player.dart';
+import '../../services/ads_config.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ad_banner.dart';
@@ -240,7 +241,8 @@ class _PlayersScreenState extends State<PlayersScreen> {
         _selectedIds.length == widget.nbJoueursRequis;
 
     return Scaffold(
-      bottomNavigationBar: AdBanner(premium: premiumService),
+      bottomNavigationBar:
+          AdBanner(premium: premiumService, placement: AdPlacement.players),
       appBar: AppBar(
         title: Text(widget.selectionMode
             ? 'S\u00e9lectionner ${widget.nbJoueursRequis} joueurs'

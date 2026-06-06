@@ -10,10 +10,19 @@ import '../services/premium_service.dart';
 /// Utilise la taille [AdSize.banner] (320×50) par défaut. Recharge la pub
 /// automatiquement si l'utilisateur perd puis regagne l'état premium (rare,
 /// mais ça arrive lors d'une restauration).
+///
+/// Chaque écran doit passer son propre [AdPlacement] pour utiliser l'unité
+/// publicitaire AdMob dédiée → statistiques fines par écran dans le
+/// dashboard AdMob.
 class AdBanner extends StatefulWidget {
   final PremiumService premium;
+  final AdPlacement placement;
 
-  const AdBanner({super.key, required this.premium});
+  const AdBanner({
+    super.key,
+    required this.premium,
+    required this.placement,
+  });
 
   @override
   State<AdBanner> createState() => _AdBannerState();
@@ -53,7 +62,7 @@ class _AdBannerState extends State<AdBanner> {
 
   void _loadAd() {
     final ad = BannerAd(
-      adUnitId: AdsConfig.bannerAdUnitId,
+      adUnitId: AdsConfig.bannerForPlacement(widget.placement),
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(

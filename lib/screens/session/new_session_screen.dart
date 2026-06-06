@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../main.dart' show premiumService;
 import '../../models/player.dart';
 import '../../models/session.dart';
+import '../../services/ads_config.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ad_banner.dart';
@@ -31,7 +32,8 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
         (_mode == SessionMode.libre || _nbDonnes != null);
 
     return Scaffold(
-      bottomNavigationBar: AdBanner(premium: premiumService),
+      bottomNavigationBar: AdBanner(
+          premium: premiumService, placement: AdPlacement.newSession),
       appBar: AppBar(title: const Text('Nouvelle session')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

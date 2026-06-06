@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_theme.dart';
+import '../../main.dart' show premiumService;
 import '../../models/session.dart';
+import '../../services/ads_config.dart';
 import '../../services/session_import_export_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/ad_banner.dart';
 
 /// \u00c9cran r\u00e9capitulatif de fin de session -- classement + stats fun.
 class SessionRecapScreen extends StatelessWidget {
@@ -17,6 +20,8 @@ class SessionRecapScreen extends StatelessWidget {
     final taux = session.tauxReussiteParJoueur;
 
     return Scaffold(
+      bottomNavigationBar:
+          AdBanner(premium: premiumService, placement: AdPlacement.recap),
       appBar: AppBar(
         title: const Text('R\u00e9capitulatif'),
         actions: [

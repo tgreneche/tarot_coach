@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'screens/home_screen.dart';
+import 'services/ads_config.dart';
 import 'services/interstitial_ad_service.dart';
 import 'services/premium_service.dart';
 import 'services/storage_service.dart';
@@ -232,7 +233,7 @@ class _OrientationWrapperState extends State<_OrientationWrapper> {
     return Column(
       children: [
         Expanded(child: widget.child),
-        AdBanner(premium: premiumService),
+        AdBanner(premium: premiumService, placement: AdPlacement.home),
       ],
     );
   }

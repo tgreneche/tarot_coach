@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../main.dart' show premiumService;
 import '../../models/session.dart';
+import '../../services/ads_config.dart';
 import '../../services/session_import_export_service.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
@@ -163,7 +164,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
             ),
         ],
       ),
-      bottomNavigationBar: AdBanner(premium: premiumService),
+      bottomNavigationBar:
+          AdBanner(premium: premiumService, placement: AdPlacement.history),
       body: _sessions.isEmpty
           ? Center(
               child: Column(

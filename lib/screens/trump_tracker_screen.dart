@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../engine/trump_tracker.dart';
 import '../main.dart' show premiumService;
+import '../services/ads_config.dart';
 import '../theme/app_theme.dart';
 import '../widgets/ad_banner.dart';
 
@@ -54,7 +55,8 @@ class _TrumpTrackerScreenState extends State<TrumpTrackerScreen> {
     final t = AppTheme.of(context);
 
     return Scaffold(
-      bottomNavigationBar: AdBanner(premium: premiumService),
+      bottomNavigationBar:
+          AdBanner(premium: premiumService, placement: AdPlacement.trumps),
       appBar: AppBar(
         title: const Text('Suivi des atouts'),
         actions: [

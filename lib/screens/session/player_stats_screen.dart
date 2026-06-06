@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../main.dart' show premiumService;
 import '../../models/donne.dart';
+import '../../services/ads_config.dart';
 import '../../services/stats_service.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
@@ -31,7 +32,8 @@ class _PlayerStatsScreenState extends State<PlayerStatsScreen> {
     final t = AppTheme.of(context);
 
     return Scaffold(
-      bottomNavigationBar: AdBanner(premium: premiumService),
+      bottomNavigationBar: AdBanner(
+          premium: premiumService, placement: AdPlacement.playerStats),
       appBar: AppBar(title: const Text('Statistiques joueurs')),
       body: _stats.isEmpty
           ? Center(
