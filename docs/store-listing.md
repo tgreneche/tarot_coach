@@ -136,7 +136,7 @@ Bonnes parties ! 🃏
 
 | Champ | Valeur à mettre |
 |---|---|
-| Email de contact public | **coachtarot@gmail.com** *(ou autre alias dédié)* |
+| Email de contact public | **t.greneche@gmail.com** |
 | Site web (optionnel) | https://tgreneche.github.io/tarot_coach/ |
 | Politique de confidentialité | https://tgreneche.github.io/tarot_coach/privacy.html |
 
