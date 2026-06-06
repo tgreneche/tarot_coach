@@ -27,10 +27,8 @@ class AdsConfig {
   // App ID Coach Tarot : ca-app-pub-8309664418375986~8884406346
   // (l'App ID est declare dans AndroidManifest.xml, pas ici).
   static const _prodBannerAndroid = 'ca-app-pub-8309664418375986/2612991554';
-  // TODO(release) : creer une unite Interstitial dans AdMob et remplacer ici
-  // (Format Interstitial, nom suggere : "session_end_interstitial").
   static const _prodInterstitialAndroid =
-      'ca-app-pub-0000000000000000/0000000000';
+      'ca-app-pub-8309664418375986/8014326199';
   // iOS non cible pour l'instant. Si l'app sort sur iOS, creer une unite
   // Banner cote AdMob et remplacer ici.
   static const _prodBannerIos = 'ca-app-pub-0000000000000000/0000000000';
