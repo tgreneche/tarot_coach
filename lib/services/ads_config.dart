@@ -62,23 +62,30 @@ class AdsConfig {
   // pointent vers l'unite home (deja existante). Tu pourras remplacer
   // chaque constante au fur et a mesure des creations dans AdMob.
 
+  // home_history_banner (unite historique, reutilisee pour Home)
   static const _prodBannerHomeAndroid =
       'ca-app-pub-8309664418375986/2612991554';
-
-  // TODO(admob): remplacer par history_banner quand l unite sera creee
-  static const _prodBannerHistoryAndroid = _prodBannerHomeAndroid;
-  // TODO(admob): remplacer par players_banner
-  static const _prodBannerPlayersAndroid = _prodBannerHomeAndroid;
-  // TODO(admob): remplacer par player_stats_banner
-  static const _prodBannerPlayerStatsAndroid = _prodBannerHomeAndroid;
-  // TODO(admob): remplacer par trumps_banner
-  static const _prodBannerTrumpsAndroid = _prodBannerHomeAndroid;
-  // TODO(admob): remplacer par player_count_banner
-  static const _prodBannerPlayerCountAndroid = _prodBannerHomeAndroid;
-  // TODO(admob): remplacer par new_session_banner
-  static const _prodBannerNewSessionAndroid = _prodBannerHomeAndroid;
-  // TODO(admob): remplacer par recap_banner
-  static const _prodBannerRecapAndroid = _prodBannerHomeAndroid;
+  // history_banner
+  static const _prodBannerHistoryAndroid =
+      'ca-app-pub-8309664418375986/5601435759';
+  // players_banner
+  static const _prodBannerPlayersAndroid =
+      'ca-app-pub-8309664418375986/8036027407';
+  // player_stats_banner
+  static const _prodBannerPlayerStatsAndroid =
+      'ca-app-pub-8309664418375986/2296085339';
+  // trumps_banner
+  static const _prodBannerTrumpsAndroid =
+      'ca-app-pub-8309664418375986/6259381070';
+  // player_count_banner
+  static const _prodBannerPlayerCountAndroid =
+      'ca-app-pub-8309664418375986/4096782396';
+  // new_session_banner
+  static const _prodBannerNewSessionAndroid =
+      'ca-app-pub-8309664418375986/4946299400';
+  // recap_banner
+  static const _prodBannerRecapAndroid =
+      'ca-app-pub-8309664418375986/6946307010';
 
   // Interstitial (1 seule unite pour les 2 emplacements : cloture + 5 donnes)
   static const _prodInterstitialAndroid =
