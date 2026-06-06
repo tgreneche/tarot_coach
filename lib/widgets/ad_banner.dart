@@ -82,29 +82,41 @@ class _AdBannerState extends State<AdBanner> {
     ad.load();
   }
 
+  /// Hauteur reservee pour le slot publicitaire, meme quand la pub n'est
+  /// pas (encore) chargee ou non remplie par AdMob. Evite le "saut" du
+  /// layout quand la pub apparait/disparait.
+  /// 50 px = hauteur standard d'une AdSize.banner.
+  static const double _reservedHeight = 50;
+
   @override
   Widget build(BuildContext context) {
-    if (widget.premium.isPremium || _ad == null || !_loaded) {
+    // Premium : aucun espace reserve, on rend tout l'ecran a l'app.
+    if (widget.premium.isPremium) {
       return const SizedBox.shrink();
     }
-    // Material + Center : la banniere (320x50) est centree horizontalement
-    // sur un fond uni qui herite de la surface du theme. Evite l'effet de
-    // "fond noir" visible sur certains ecrans (home notamment) ou la
-    // banniere n'est pas dans un Scaffold.bottomNavigationBar.
+
+    // Material + fond surface : evite le fond Window noir visible sur les
+    // ecrans ou la banniere n'est pas dans Scaffold.bottomNavigationBar
+    // (notamment le home).
     return Material(
       color: Theme.of(context).colorScheme.surface,
       child: SafeArea(
         top: false,
         child: SizedBox(
           width: double.infinity,
-          height: _ad!.size.height.toDouble(),
-          child: Center(
-            child: SizedBox(
-              width: _ad!.size.width.toDouble(),
-              height: _ad!.size.height.toDouble(),
-              child: AdWidget(ad: _ad!),
-            ),
-          ),
+          height: _reservedHeight,
+          // Si la pub est chargee, on l'affiche centree a sa taille native.
+          // Sinon on garde un slot vide (transparent) pour ne pas
+          // decaler le contenu de l'app quand la pub finit de charger.
+          child: (_ad != null && _loaded)
+              ? Center(
+                  child: SizedBox(
+                    width: _ad!.size.width.toDouble(),
+                    height: _ad!.size.height.toDouble(),
+                    child: AdWidget(ad: _ad!),
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
       ),
     );
