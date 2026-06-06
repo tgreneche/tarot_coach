@@ -5,12 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'screens/home_screen.dart';
+import 'services/interstitial_ad_service.dart';
 import 'services/premium_service.dart';
 import 'services/storage_service.dart';
 import 'widgets/ad_banner.dart';
 
 late ThemeProvider themeProvider;
 late PremiumService premiumService;
+late InterstitialAdService interstitialAdService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +33,11 @@ void main() async {
     MobileAds.instance.initialize(),
     premiumService.init(),
   ]);
+
+  // Service interstitial : précharge la 1re pub en arrière-plan
+  // (no-op si premium).
+  interstitialAdService = InterstitialAdService(premium: premiumService);
+  interstitialAdService.init();
 
   runApp(const TarotCoachApp());
 }

@@ -18,14 +18,24 @@ class AdsConfig {
   // https://developers.google.com/admob/android/test-ads
   static const _testBannerAndroid = 'ca-app-pub-3940256099942544/6300978111';
   static const _testBannerIos = 'ca-app-pub-3940256099942544/2934735716';
+  static const _testInterstitialAndroid =
+      'ca-app-pub-3940256099942544/1033173712';
+  static const _testInterstitialIos =
+      'ca-app-pub-3940256099942544/4411468910';
 
   // === IDs de production ===
   // App ID Coach Tarot : ca-app-pub-8309664418375986~8884406346
   // (l'App ID est declare dans AndroidManifest.xml, pas ici).
   static const _prodBannerAndroid = 'ca-app-pub-8309664418375986/2612991554';
+  // TODO(release) : creer une unite Interstitial dans AdMob et remplacer ici
+  // (Format Interstitial, nom suggere : "session_end_interstitial").
+  static const _prodInterstitialAndroid =
+      'ca-app-pub-0000000000000000/0000000000';
   // iOS non cible pour l'instant. Si l'app sort sur iOS, creer une unite
   // Banner cote AdMob et remplacer ici.
   static const _prodBannerIos = 'ca-app-pub-0000000000000000/0000000000';
+  static const _prodInterstitialIos =
+      'ca-app-pub-0000000000000000/0000000000';
 
   /// ID de l'unité bannière à utiliser selon plateforme + mode build.
   static String get bannerAdUnitId {
@@ -35,9 +45,23 @@ class AdsConfig {
     return Platform.isIOS ? _prodBannerIos : _prodBannerAndroid;
   }
 
-  /// Indique si l'ID Android de prod a bien été remplacé.
-  /// Utile pour un assert au démarrage en release. iOS exclu tant que
-  /// l'app n'est pas portée sur iOS.
-  static bool get prodIdsConfigured =>
+  /// ID de l'unité interstitielle à utiliser selon plateforme + mode build.
+  static String get interstitialAdUnitId {
+    if (kDebugMode) {
+      return Platform.isIOS
+          ? _testInterstitialIos
+          : _testInterstitialAndroid;
+    }
+    return Platform.isIOS
+        ? _prodInterstitialIos
+        : _prodInterstitialAndroid;
+  }
+
+  /// Indique si l'ID Banner Android de prod a bien été remplacé.
+  static bool get prodBannerConfigured =>
       !_prodBannerAndroid.contains('0000000000000000');
+
+  /// Indique si l'ID Interstitial Android de prod a bien été remplacé.
+  static bool get prodInterstitialConfigured =>
+      !_prodInterstitialAndroid.contains('0000000000000000');
 }

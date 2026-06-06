@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../main.dart' show interstitialAdService;
 import '../../theme/app_theme.dart';
 import '../../models/player.dart';
 import '../../models/session.dart';
@@ -64,6 +65,10 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
       setState(() => _session.donnes.add(donne));
       await StorageService.instance.saveSession(_session);
 
+      // Interstitial toutes les N donnes (cadence configurée dans le service).
+      // Skip auto si premium ou si frequency cap pas écoulée.
+      await interstitialAdService.onDonneAjoutee();
+
       // Vérifier si l'objectif est maintenant atteint
       if (_session.objectifAtteint) {
         _showFinDeSession();
@@ -94,6 +99,8 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
           onCloturer: () async {
             Navigator.pop(ctx);
             await StorageService.instance.cloturer(_session);
+            // Interstitial avant le recap (skip si premium ou cap actif).
+            await interstitialAdService.onSessionCloturee();
             if (mounted) {
               Navigator.pushReplacement(
                 context,
@@ -390,6 +397,8 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
 
     if (confirm == true) {
       await StorageService.instance.cloturer(_session);
+      // Interstitial avant le recap (skip si premium ou cap actif).
+      await interstitialAdService.onSessionCloturee();
       if (mounted) {
         Navigator.pushReplacement(
           context,
