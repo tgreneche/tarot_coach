@@ -420,7 +420,8 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
         title: Text(
           _session.mode == SessionMode.donnesFixees
               ? 'Session ${_session.nbDonnesJouees}/${_session.nbDonnesPrevues}'
-              : 'Session — ${_session.nbDonnesJouees} donne(s)',
+              : '${_session.nbDonnesJouees} donne${_session.nbDonnesJouees > 1 ? "s" : ""}',
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(

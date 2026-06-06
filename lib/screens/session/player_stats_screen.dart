@@ -160,7 +160,7 @@ class _PlayerStatsCard extends StatelessWidget {
               ),
               _Tile(
                 icon: Icons.show_chart,
-                label: 'Score moyen / session',
+                label: 'Moy. / session',
                 value: _avg(stats.scoreMoyenParSession),
                 color: t.scoreColor(stats.scoreMoyenParSession.round()),
               ),
@@ -174,7 +174,7 @@ class _PlayerStatsCard extends StatelessWidget {
               ),
               _Tile(
                 icon: Icons.check_circle,
-                label: 'Réussite des prises',
+                label: 'Réussite prises',
                 value: stats.donnesPrises > 0
                     ? _pct(stats.tauxReussitePrises)
                     : '–',
@@ -193,7 +193,7 @@ class _PlayerStatsCard extends StatelessWidget {
               ),
               _Tile(
                 icon: Icons.bar_chart,
-                label: 'Score / donne',
+                label: 'Moy. / donne',
                 value: _avg(stats.scoreMoyenParDonne),
                 color: t.scoreColor(stats.scoreMoyenParDonne.round()),
               ),
