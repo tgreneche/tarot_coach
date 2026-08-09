@@ -5,11 +5,15 @@ class Player {
   final String id;
   final String name;
   final int colorValue; // Couleur stockée en int pour la sérialisation
+  /// Nom du fichier de la photo de profil, relatif au dossier de l'app.
+  /// null si le joueur n'a pas de photo (fallback bulle couleur + initiales).
+  final String? photoFileName;
 
   Player({
     String? id,
     required this.name,
     int? colorValue,
+    this.photoFileName,
   })  : id = id ?? DateTime.now().millisecondsSinceEpoch.toString(),
         colorValue = colorValue ?? Colors.blue.value;
 
@@ -24,11 +28,18 @@ class Player {
     return name.trim().substring(0, name.trim().length.clamp(0, 2)).toUpperCase();
   }
 
-  Player copyWith({String? name, int? colorValue}) {
+  Player copyWith({
+    String? name,
+    int? colorValue,
+    Object? photoFileName = _sentinel,
+  }) {
     return Player(
       id: id,
       name: name ?? this.name,
       colorValue: colorValue ?? this.colorValue,
+      photoFileName: identical(photoFileName, _sentinel)
+          ? this.photoFileName
+          : photoFileName as String?,
     );
   }
 
@@ -36,12 +47,14 @@ class Player {
         'id': id,
         'name': name,
         'colorValue': colorValue,
+        if (photoFileName != null) 'photoFileName': photoFileName,
       };
 
   factory Player.fromJson(Map<String, dynamic> json) => Player(
         id: json['id'] as String,
         name: json['name'] as String,
         colorValue: json['colorValue'] as int?,
+        photoFileName: json['photoFileName'] as String?,
       );
 
   @override
@@ -54,6 +67,9 @@ class Player {
   @override
   String toString() => name;
 }
+
+/// Sentinelle pour distinguer "non fourni" de "null explicite" dans copyWith.
+const Object _sentinel = Object();
 
 /// Couleurs prédéfinies pour les joueurs.
 class PlayerColors {

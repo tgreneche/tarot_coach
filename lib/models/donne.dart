@@ -15,7 +15,7 @@ enum Contrat {
   const Contrat(this.label, this.shortLabel, this.multiplicateur);
 }
 
-/// Roi appelé à 5 joueurs.
+/// Couleur appelée (Roi appelé) à 5 joueurs.
 enum RoiAppele {
   coeur('Roi de Cœur', '♥'),
   carreau('Roi de Carreau', '♦'),
@@ -26,6 +26,9 @@ enum RoiAppele {
   final String symbol;
 
   const RoiAppele(this.label, this.symbol);
+
+  /// Couleur rouge (Cœur, Carreau) pour l'affichage du symbole.
+  bool get isRouge => this == coeur || this == carreau;
 }
 
 /// Camp ayant réalisé le petit au bout.
@@ -49,15 +52,6 @@ enum TypePoignee {
   final int bonus;
 
   const TypePoignee(this.label, this.bonus);
-}
-
-/// Camp ayant annoncé la poignée.
-enum CampPoignee {
-  attaque('Preneur'),
-  defense('Défense');
-
-  final String label;
-  const CampPoignee(this.label);
 }
 
 /// Chelem (tous les plis).
@@ -133,8 +127,13 @@ class Donne {
 
   // Primes
   final CampPetitAuBout petitAuBout;
-  final TypePoignee poignee;
-  final CampPoignee? campPoignee; // Qui a annoncé la poignée
+
+  /// Poignées annoncées, par joueur (index joueur → type).
+  /// Ne contient jamais TypePoignee.aucune.
+  /// Clé -1 : poignée de la défense issue de l'ancien format de données
+  /// (le joueur exact n'était pas enregistré).
+  final Map<int, TypePoignee> poignees;
+
   final Chelem chelem;
 
   // Donneur de cette donne
@@ -157,8 +156,7 @@ class Donne {
     this.roiAppele,
     this.appeleIndex,
     this.petitAuBout = CampPetitAuBout.aucun,
-    this.poignee = TypePoignee.aucune,
-    this.campPoignee,
+    this.poignees = const {},
     this.chelem = Chelem.aucun,
     required this.donneurIndex,
     this.mortIndex,
@@ -177,8 +175,7 @@ class Donne {
         roiAppele: roiAppele,
         appeleIndex: appeleIndex,
         petitAuBout: petitAuBout,
-        poignee: poignee,
-        campPoignee: campPoignee,
+        poignees: poignees,
         chelem: chelem,
         donneurIndex: donneurIndex,
         mortIndex: mortIndex,
@@ -195,6 +192,10 @@ class Donne {
   bool get estAutoAppel =>
       appeleIndex != null && appeleIndex == preneurIndex;
 
+  /// Somme des primes de poignées annoncées (pour le camp vainqueur).
+  int get primePoignees =>
+      poignees.values.fold(0, (s, p) => s + p.bonus);
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'numero': numero,
@@ -206,8 +207,7 @@ class Donne {
         'roiAppele': roiAppele?.index,
         'appeleIndex': appeleIndex,
         'petitAuBout': petitAuBout.index,
-        'poignee': poignee.index,
-        'campPoignee': campPoignee?.index,
+        'poignees': poignees.map((k, v) => MapEntry(k.toString(), v.index)),
         'chelem': chelem.index,
         'donneurIndex': donneurIndex,
         'mortIndex': mortIndex,
@@ -227,14 +227,29 @@ class Donne {
             : null,
         appeleIndex: json['appeleIndex'] as int?,
         petitAuBout: CampPetitAuBout.values[json['petitAuBout'] as int],
-        poignee: TypePoignee.values[json['poignee'] as int],
-        campPoignee: json['campPoignee'] != null
-            ? CampPoignee.values[json['campPoignee'] as int]
-            : null,
+        poignees: _poigneesFromJson(json),
         chelem: Chelem.values[json['chelem'] as int],
         donneurIndex: json['donneurIndex'] as int,
         mortIndex: json['mortIndex'] as int?,
         scores: (json['scores'] as Map<String, dynamic>)
             .map((k, v) => MapEntry(int.parse(k), (v as num).toInt())),
       );
+
+  /// Lit les poignées : nouveau format ('poignees') ou migration de
+  /// l'ancien format ('poignee' + 'campPoignee'). Dans l'ancien format,
+  /// une poignée de la défense est stockée sous la clé -1 (joueur inconnu).
+  static Map<int, TypePoignee> _poigneesFromJson(Map<String, dynamic> json) {
+    if (json['poignees'] != null) {
+      return (json['poignees'] as Map<String, dynamic>).map(
+          (k, v) => MapEntry(int.parse(k), TypePoignee.values[v as int]));
+    }
+    final legacyIndex = json['poignee'] as int?;
+    if (legacyIndex == null) return const {};
+    final legacy = TypePoignee.values[legacyIndex];
+    if (legacy == TypePoignee.aucune) return const {};
+    // campPoignee : 0 = attaque (attribuée au preneur), 1 = défense
+    final camp = json['campPoignee'] as int?;
+    final key = camp == 1 ? -1 : json['preneurIndex'] as int;
+    return {key: legacy};
+  }
 }

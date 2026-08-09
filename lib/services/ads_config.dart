@@ -16,10 +16,19 @@ enum AdPlacement {
   history,
   players,
   playerStats,
-  trumps,
   playerCount,
   newSession,
   recap,
+}
+
+/// Emplacements d'interstitiels, chacun avec sa propre unité AdMob
+/// pour des statistiques séparées (revenus, eCPM par moment de pub).
+enum InterstitialPlacement {
+  /// Cycle de session : lancement, tous les 5 donnes, clôture.
+  session,
+
+  /// Au clic "Analyser ma main" (avant l'écran de résultat).
+  handAnalysis,
 }
 
 /// Configuration centralisée des IDs AdMob.
@@ -53,7 +62,6 @@ class AdsConfig {
   //   history_banner                  -> _prodBannerHistory
   //   players_banner                  -> _prodBannerPlayers
   //   player_stats_banner             -> _prodBannerPlayerStats
-  //   trumps_banner                   -> _prodBannerTrumps
   //   player_count_banner             -> _prodBannerPlayerCount
   //   new_session_banner              -> _prodBannerNewSession
   //   recap_banner                    -> _prodBannerRecap
@@ -74,9 +82,6 @@ class AdsConfig {
   // player_stats_banner
   static const _prodBannerPlayerStatsAndroid =
       'ca-app-pub-8309664418375986/2296085339';
-  // trumps_banner
-  static const _prodBannerTrumpsAndroid =
-      'ca-app-pub-8309664418375986/6259381070';
   // player_count_banner
   static const _prodBannerPlayerCountAndroid =
       'ca-app-pub-8309664418375986/4096782396';
@@ -87,9 +92,12 @@ class AdsConfig {
   static const _prodBannerRecapAndroid =
       'ca-app-pub-8309664418375986/6946307010';
 
-  // Interstitial (1 seule unite pour les 2 emplacements : cloture + 5 donnes)
+  // Interstitial cycle de session (lancement + 5 donnes + cloture)
   static const _prodInterstitialAndroid =
       'ca-app-pub-8309664418375986/8014326199';
+  // hand_analysis_interstitial (au clic "Analyser ma main")
+  static const _prodInterstitialHandAnalysisAndroid =
+      'ca-app-pub-8309664418375986/1070225429';
 
   // iOS non cible pour l'instant : placeholders.
   static const _prodBannerIos = 'ca-app-pub-0000000000000000/0000000000';
@@ -117,8 +125,6 @@ class AdsConfig {
         return _prodBannerPlayersAndroid;
       case AdPlacement.playerStats:
         return _prodBannerPlayerStatsAndroid;
-      case AdPlacement.trumps:
-        return _prodBannerTrumpsAndroid;
       case AdPlacement.playerCount:
         return _prodBannerPlayerCountAndroid;
       case AdPlacement.newSession:
@@ -128,17 +134,29 @@ class AdsConfig {
     }
   }
 
-  /// ID de l'unité interstitielle.
-  static String get interstitialAdUnitId {
+  /// ID de l'unité interstitielle pour un emplacement donné.
+  ///
+  /// En debug ou iOS : fallback sur l'ID de test ou le placeholder iOS.
+  static String interstitialForPlacement(InterstitialPlacement placement) {
     if (kDebugMode) {
       return Platform.isIOS
           ? _testInterstitialIos
           : _testInterstitialAndroid;
     }
-    return Platform.isIOS
-        ? _prodInterstitialIos
-        : _prodInterstitialAndroid;
+    if (Platform.isIOS) return _prodInterstitialIos;
+
+    switch (placement) {
+      case InterstitialPlacement.session:
+        return _prodInterstitialAndroid;
+      case InterstitialPlacement.handAnalysis:
+        return _prodInterstitialHandAnalysisAndroid;
+    }
   }
+
+  /// ID de l'unité interstitielle du cycle de session.
+  /// Conservé pour compatibilité — préférer [interstitialForPlacement].
+  static String get interstitialAdUnitId =>
+      interstitialForPlacement(InterstitialPlacement.session);
 
   /// Compte le nombre d'unités bannière encore non personnalisées
   /// (= égales à l'unité home). Utile pour un log au démarrage en debug.
@@ -147,7 +165,6 @@ class AdsConfig {
     if (_prodBannerHistoryAndroid == _prodBannerHomeAndroid) count++;
     if (_prodBannerPlayersAndroid == _prodBannerHomeAndroid) count++;
     if (_prodBannerPlayerStatsAndroid == _prodBannerHomeAndroid) count++;
-    if (_prodBannerTrumpsAndroid == _prodBannerHomeAndroid) count++;
     if (_prodBannerPlayerCountAndroid == _prodBannerHomeAndroid) count++;
     if (_prodBannerNewSessionAndroid == _prodBannerHomeAndroid) count++;
     if (_prodBannerRecapAndroid == _prodBannerHomeAndroid) count++;

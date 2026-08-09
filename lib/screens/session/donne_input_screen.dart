@@ -3,6 +3,7 @@ import '../../theme/app_theme.dart';
 import '../../models/player.dart';
 import '../../models/donne.dart';
 import '../../engine/donne_score_engine.dart';
+import '../../widgets/player_avatar.dart';
 
 /// Saisie rapide d'une donne — objectif : < 15 secondes.
 /// Formulaire en un seul écran scrollable.
@@ -38,8 +39,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
 
   // Primes
   late CampPetitAuBout _petitAuBout;
-  late TypePoignee _poignee;
-  CampPoignee? _campPoignee;
+  late Map<int, TypePoignee> _poignees; // index joueur → poignée
   late Chelem _chelem;
 
   // Saisie clavier inline des points
@@ -80,8 +80,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
     _roiAppele = d?.roiAppele;
     _appeleIndex = d?.appeleIndex;
     _petitAuBout = d?.petitAuBout ?? CampPetitAuBout.aucun;
-    _poignee = d?.poignee ?? TypePoignee.aucune;
-    _campPoignee = d?.campPoignee;
+    // Clé -1 (défense, ancien format) écartée : le joueur est inconnu
+    _poignees = Map.of(d?.poignees ?? {})..removeWhere((k, _) => k < 0);
     _chelem = d?.chelem ?? Chelem.aucun;
     _pointsController = TextEditingController();
     _pointsFocusNode = FocusNode();
@@ -128,9 +128,9 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
   /// Validation complète avant enregistrement.
   /// Retourne null si tout est OK, sinon le message d'erreur + le champ.
   ({String message, String field})? _validate() {
-    // À 5 ou 6 joueurs : Roi appelé obligatoire
+    // À 5 ou 6 joueurs : couleur appelée obligatoire
     if (_hasAppelRoi && _roiAppele == null) {
-      return (message: 'Tu dois choisir un Roi à appeler', field: 'roi');
+      return (message: 'Tu dois choisir la couleur appelée', field: 'roi');
     }
     // À 5 ou 6 joueurs : appelé obligatoire
     if (_hasAppelRoi && _appeleIndex == null) {
@@ -174,8 +174,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
       appeleIndex: _hasAppelRoi ? _appeleIndex : null,
       mortIndex: _is6Joueurs ? widget.mortIndex : null,
       petitAuBout: _petitAuBout,
-      poignee: _poignee,
-      campPoignee: _campPoignee,
+      poignees: _poignees,
       chelem: _chelem,
     );
 
@@ -202,8 +201,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
       roiAppele: _hasAppelRoi ? _roiAppele : null,
       appeleIndex: _hasAppelRoi ? _appeleIndex : null,
       petitAuBout: _petitAuBout,
-      poignee: _poignee,
-      campPoignee: _poignee != TypePoignee.aucune ? _campPoignee : null,
+      poignees: Map.of(_poignees),
       chelem: _chelem,
       donneurIndex: widget.donneurIndex,
       mortIndex: _is6Joueurs ? widget.mortIndex : null,
@@ -211,6 +209,51 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
     );
 
     Navigator.pop(context, donne);
+  }
+
+  /// Ligne de saisie de poignée pour un joueur : nom + segments — / S / D / T.
+  Widget _buildPoigneeRow(int i) {
+    final selection = _poignees[i] ?? TypePoignee.aucune;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(widget.joueurs[i].name,
+                style: const TextStyle(fontSize: 12),
+                overflow: TextOverflow.ellipsis),
+          ),
+          SegmentedButton<TypePoignee>(
+            showSelectedIcon: false,
+            segments: [
+              for (final tp in TypePoignee.values)
+                ButtonSegment(
+                  value: tp,
+                  label: Text(
+                    switch (tp) {
+                      TypePoignee.aucune => '—',
+                      TypePoignee.simple => 'S',
+                      TypePoignee.double_ => 'D',
+                      TypePoignee.triple => 'T',
+                    },
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  tooltip: tp == TypePoignee.aucune ? 'Aucune' : tp.label,
+                ),
+            ],
+            selected: {selection},
+            onSelectionChanged: (v) => setState(() {
+              if (v.first == TypePoignee.aucune) {
+                _poignees.remove(i);
+              } else {
+                _poignees[i] = v.first;
+              }
+            }),
+            style: const ButtonStyle(visualDensity: VisualDensity.compact),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -295,13 +338,8 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                       children: _joueursActifsIndices.map((i) {
                         final p = widget.joueurs[i];
                         return ChoiceChip(
-                          avatar: CircleAvatar(
-                            backgroundColor: p.color,
-                            radius: 12,
-                            child: Text(p.initials,
-                                style: const TextStyle(
-                                    fontSize: 9, color: Colors.white)),
-                          ),
+                          avatar: PlayerAvatar(
+                              player: p, radius: 12, fontSize: 9),
                           label: Text(p.name),
                           selected: _preneurIndex == i,
                           onSelected: (_) =>
@@ -385,7 +423,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text('Roi appelé',
+                            child: Text('Couleur appelée',
                                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                       color: _errorField == 'roi' ? t.error : null,
                                     )),
@@ -401,7 +439,12 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                             .map((r) => ButtonSegment(
                                   value: r,
                                   label: Text(r.symbol,
-                                      style: const TextStyle(fontSize: 18)),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: r.isRouge
+                                            ? Colors.red
+                                            : Colors.blue,
+                                      )),
                                 ))
                             .toList(),
                         selected: _roiAppele != null ? {_roiAppele!} : {},
@@ -603,59 +646,32 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Poignée
-                    _SectionLabel('Poignée'),
-                    SegmentedButton<TypePoignee>(
-                      showSelectedIcon: false,
-                      segments: TypePoignee.values.map((tp) {
-                        final seuil = SeuilsPoignee.seuilPour(
-                            widget.joueurs.length, tp);
-                        final label = tp == TypePoignee.aucune
-                            ? 'Non'
-                            : '${tp.label}\n(${seuil ?? ""})';
-                        return ButtonSegment(
-                          value: tp,
-                          label: Text(label,
-                              style: const TextStyle(fontSize: 10),
-                              textAlign: TextAlign.center),
-                        );
-                      }).toList(),
-                      selected: {_poignee},
-                      onSelectionChanged: (v) => setState(() {
-                        _poignee = v.first;
-                        if (_poignee == TypePoignee.aucune) {
-                          _campPoignee = null;
-                        } else {
-                          _campPoignee ??= CampPoignee.attaque;
-                        }
-                      }),
-                      style: const ButtonStyle(
-                          visualDensity: VisualDensity.compact),
+                    // Poignées — annonce par joueur
+                    _SectionLabel('Poignées (par joueur)'),
+                    Text(
+                      'Seuils : Simple ${SeuilsPoignee.seuilPour(widget.joueurs.length, TypePoignee.simple)} · '
+                      'Double ${SeuilsPoignee.seuilPour(widget.joueurs.length, TypePoignee.double_)} · '
+                      'Triple ${SeuilsPoignee.seuilPour(widget.joueurs.length, TypePoignee.triple)} atouts',
+                      style: TextStyle(
+                          fontSize: 11, color: t.textSecondary),
                     ),
-                    if (_poignee != TypePoignee.aucune) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Text('Annoncée par : ',
-                              style: TextStyle(fontSize: 12)),
-                          ChoiceChip(
-                            label: const Text('Attaque',
-                                style: TextStyle(fontSize: 11)),
-                            selected: _campPoignee == CampPoignee.attaque,
-                            onSelected: (_) => setState(
-                                () => _campPoignee = CampPoignee.attaque),
+                    const SizedBox(height: 6),
+                    for (final i in _joueursActifsIndices)
+                      _buildPoigneeRow(i),
+                    if (_poignees.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'Prime totale : '
+                          '${_poignees.values.fold(0, (s, p) => s + p.bonus)} pts '
+                          'pour le camp vainqueur',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: t.gold,
                           ),
-                          const SizedBox(width: 6),
-                          ChoiceChip(
-                            label: const Text('Défense',
-                                style: TextStyle(fontSize: 11)),
-                            selected: _campPoignee == CampPoignee.defense,
-                            onSelected: (_) => setState(
-                                () => _campPoignee = CampPoignee.defense),
-                          ),
-                        ],
+                        ),
                       ),
-                    ],
                     const SizedBox(height: 12),
 
                     // Chelem

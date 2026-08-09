@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permission camera : utilisee uniquement pour la photo de profil
+         d'un joueur dans le carnet. Le selecteur d'image (galerie) ne requiert
+         aucune permission a partir d'Android 13 (photo picker systeme). -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="Coach Tarot"
         android:name="${applicationName}"

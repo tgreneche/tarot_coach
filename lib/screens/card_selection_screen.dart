@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../main.dart' show interstitialAdService;
 import '../theme/app_theme.dart';
 import '../models/card.dart';
 import '../models/game.dart';
@@ -73,7 +74,7 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
     });
   }
 
-  void _analyzeHand() {
+  Future<void> _analyzeHand() async {
     if (_selectedIds.length != _expectedCards) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -89,6 +90,12 @@ class _CardSelectionScreenState extends State<CardSelectionScreen>
       _selectedCards,
       playerCount: widget.playerCount,
     );
+
+    // Interstitiel plein écran avant la navigation. Le cap interne de 2 min
+    // évite l'effet "matraquage" si une pub vient d'être affichée.
+    await interstitialAdService.onHandAnalysee();
+
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(

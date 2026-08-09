@@ -6,6 +6,7 @@ import '../../services/session_import_export_service.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ad_banner.dart';
+import '../../widgets/player_avatar.dart';
 import 'session_recap_screen.dart';
 
 /// Historique des sessions cl\u00f4tur\u00e9es (20 derni\u00e8res).
@@ -250,10 +251,8 @@ class _SessionHistoryScreenState extends State<SessionHistoryScreen> {
                             spacing: 6,
                             children: session.joueurs
                                 .map((j) => Chip(
-                                      avatar: CircleAvatar(
-                                        backgroundColor: j.color,
-                                        radius: 10,
-                                      ),
+                                      avatar:
+                                          PlayerAvatar(player: j, radius: 10),
                                       label: Text(j.name,
                                           style:
                                               const TextStyle(fontSize: 11)),

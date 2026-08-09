@@ -999,7 +999,7 @@ class _DistributionBar extends StatelessWidget {
             ? Colors.red.shade400
             : Colors.blue.shade400;
 
-    String label = '${suit.symbol} ${suit.label}';
+    String label = ' ${suit.label}';
     if (count == 0) {
       label += ' — Chicane ✂️';
     } else if (count == 1) {
@@ -1010,7 +1010,17 @@ class _DistributionBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text.rich(
+          TextSpan(children: [
+            TextSpan(
+              text: suit.symbol,
+              style: TextStyle(
+                  color: barColor, fontWeight: FontWeight.bold),
+            ),
+            TextSpan(text: label),
+          ]),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: 4),
         Row(
           children: [

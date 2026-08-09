@@ -7,6 +7,7 @@ import '../../models/session.dart';
 import '../../models/donne.dart';
 import '../../engine/donne_score_engine.dart';
 import '../../services/storage_service.dart';
+import '../../widgets/player_avatar.dart';
 import 'donne_input_screen.dart';
 import 'session_recap_screen.dart';
 
@@ -617,14 +618,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                 )
               : null,
           child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: joueur.color,
-              child: Text(
-                joueur.initials,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
+            leading: PlayerAvatar(player: joueur),
             title: Row(
               children: [
                 Text(medal, style: const TextStyle(fontSize: 18)),
@@ -930,13 +924,7 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    CircleAvatar(
-                      radius: 12,
-                      backgroundColor: preneur.color,
-                      child: Text(preneur.initials,
-                          style: const TextStyle(
-                              fontSize: 9, color: Colors.white)),
-                    ),
+                    PlayerAvatar(player: preneur, radius: 12, fontSize: 9),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
@@ -1018,7 +1006,12 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                         const SizedBox(width: 6),
                         Text(
                           donne.roiAppele!.symbol,
-                          style: const TextStyle(fontSize: 12),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: donne.roiAppele!.isRouge
+                                ? Colors.red
+                                : Colors.blue,
+                          ),
                         ),
                       ],
                     ],
@@ -1026,18 +1019,19 @@ class _SessionBoardScreenState extends State<SessionBoardScreen>
                 ),
                 // Primes
                 if (donne.petitAuBout != CampPetitAuBout.aucun ||
-                    donne.poignee != TypePoignee.aucune ||
+                    donne.poignees.isNotEmpty ||
                     donne.chelem != Chelem.aucun)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Wrap(
                       spacing: 6,
+                      runSpacing: 4,
                       children: [
                         if (donne.petitAuBout != CampPetitAuBout.aucun)
                           _PrimeBadge('Petit au bout'),
-                        if (donne.poignee != TypePoignee.aucune)
+                        for (final e in donne.poignees.entries)
                           _PrimeBadge(
-                              'Poignée ${donne.poignee.label}'),
+                              'Poignée ${e.value.label} · ${e.key >= 0 ? _session.joueurs[e.key].name : "Défense"}'),
                         if (donne.chelem != Chelem.aucun)
                           _PrimeBadge('Chelem'),
                       ],
@@ -1217,12 +1211,7 @@ class _FinDeSessionSheetState extends State<_FinDeSessionSheet> {
         children: [
           Text(medal, style: const TextStyle(fontSize: 20)),
           const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: joueur.color,
-            child: Text(joueur.initials,
-                style: const TextStyle(fontSize: 10, color: Colors.white)),
-          ),
+          PlayerAvatar(player: joueur, radius: 14, fontSize: 10),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

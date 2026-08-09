@@ -6,6 +6,7 @@ import 'theme/app_theme.dart';
 import 'theme/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/ads_config.dart';
+import 'services/consent_service.dart';
 import 'services/interstitial_ad_service.dart';
 import 'services/premium_service.dart';
 import 'services/storage_service.dart';
@@ -26,21 +27,35 @@ void main() async {
   themeProvider = ThemeProvider();
   await themeProvider.init(prefs);
 
-  // Initialiser le SDK AdMob et le service premium en parallèle.
   // PremiumService doit être init avant le runApp pour éviter un flash
   // de pub si l'utilisateur est déjà premium.
   premiumService = PremiumService();
-  await Future.wait([
-    MobileAds.instance.initialize(),
-    premiumService.init(),
-  ]);
+  await premiumService.init();
 
-  // Service interstitial : précharge la 1re pub en arrière-plan
-  // (no-op si premium).
-  interstitialAdService = InterstitialAdService(premium: premiumService);
-  interstitialAdService.init();
+  // Le service interstitial est créé en mode "dormant" : pas de preload tant
+  // que le consentement RGPD (UMP) n'a pas été recueilli ET qu'AdMob n'a pas
+  // été initialisé. Les deux étapes sont déclenchées depuis le splash gate
+  // pour que le formulaire UMP s'affiche par-dessus l'écran Flutter monté
+  // (sinon Android rend le formulaire derrière le splash natif vert).
+  interstitialAdService = InterstitialAdService(
+    premium: premiumService,
+    autoPreload: false,
+  );
 
   runApp(const TarotCoachApp());
+}
+
+/// Demande le consentement RGPD et initialise AdMob si l'utilisateur le
+/// permet. Appelé depuis le splash gate une fois l'UI Flutter montée.
+Future<void> initAdsAfterConsent() async {
+  if (premiumService.isPremium) return;
+
+  await ConsentService.instance.requestConsent();
+  if (!await ConsentService.instance.canRequestAds()) return;
+
+  await MobileAds.instance.initialize();
+  // Active le preload sur le service interstitial existant.
+  interstitialAdService.enablePreload();
 }
 
 class TarotCoachApp extends StatefulWidget {
@@ -109,6 +124,10 @@ class _SplashGateState extends State<_SplashGate>
   late Animation<double> _lineWidth;
   bool _showHome = false;
 
+  /// Durée minimum d'affichage du splash, pour laisser l'animation se jouer
+  /// même quand le consentement RGPD est instantané (cas user déjà répondu).
+  static const Duration _minSplashDuration = Duration(milliseconds: 1800);
+
   @override
   void initState() {
     super.initState();
@@ -128,11 +147,27 @@ class _SplashGateState extends State<_SplashGate>
     );
 
     _controller.forward();
+    _bootstrap();
+  }
 
-    // Transition vers l'écran d'accueil après 1.8s
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) setState(() => _showHome = true);
-    });
+  /// Affiche le formulaire UMP par-dessus le splash (UI Flutter déjà montée,
+  /// pas de fond vert natif), initialise AdMob, puis transite vers l'écran
+  /// d'accueil — sans descendre sous [_minSplashDuration] pour que
+  /// l'animation soit visible même quand tout est instantané.
+  Future<void> _bootstrap() async {
+    final start = DateTime.now();
+
+    // 1 frame de marge pour que la Flutter view soit bien à l'écran avant
+    // que UMP n'attache son formulaire natif par-dessus.
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    await initAdsAfterConsent();
+
+    final elapsed = DateTime.now().difference(start);
+    if (elapsed < _minSplashDuration) {
+      await Future.delayed(_minSplashDuration - elapsed);
+    }
+    if (mounted) setState(() => _showHome = true);
   }
 
   @override

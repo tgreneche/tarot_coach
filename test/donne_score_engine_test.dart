@@ -174,15 +174,14 @@ void main() {
 
     // === Poignée ===
 
-    test('Poignée simple annoncée par attaque, contrat fait', () {
+    test('Poignée simple annoncée par le preneur, contrat fait', () {
       final scores = DonneScoreEngine.calculer(
         nbJoueurs: 4,
         preneurIndex: 0,
         contrat: Contrat.petite,
         nbBouts: 1,
         pointsPreneur: 51,
-        poignee: TypePoignee.simple,
-        campPoignee: CampPoignee.attaque,
+        poignees: const {0: TypePoignee.simple},
       );
       // Base : (25+0)×1 = 25
       // Poignée : +20 (fait → positif pour attaque)
@@ -191,15 +190,14 @@ void main() {
       expect(_somme(scores), 0);
     });
 
-    test('Poignée annoncée par défense, contrat fait = poignée pour attaque', () {
+    test('Poignée annoncée par un défenseur, contrat fait = poignée pour attaque', () {
       final scores = DonneScoreEngine.calculer(
         nbJoueurs: 4,
         preneurIndex: 0,
         contrat: Contrat.petite,
         nbBouts: 1,
         pointsPreneur: 51,
-        poignee: TypePoignee.simple,
-        campPoignee: CampPoignee.defense,
+        poignees: const {2: TypePoignee.simple},
       );
       // Base : 25
       // Poignée : +20 (fait → poignée va au camp vainqueur = attaque)
@@ -215,13 +213,29 @@ void main() {
         contrat: Contrat.petite,
         nbBouts: 0,
         pointsPreneur: 50,
-        poignee: TypePoignee.double_,
-        campPoignee: CampPoignee.attaque,
+        poignees: const {0: TypePoignee.double_},
       );
       // Base : -(25+6)×1 = -31
       // Poignée : -30 (chuté → poignée va à la défense)
       // Total : -61
       expect(scores[0], -61 * 3);
+      expect(_somme(scores), 0);
+    });
+
+    test('Poignées multiples : les primes se cumulent', () {
+      final scores = DonneScoreEngine.calculer(
+        nbJoueurs: 4,
+        preneurIndex: 0,
+        contrat: Contrat.petite,
+        nbBouts: 1,
+        pointsPreneur: 51,
+        poignees: const {
+          0: TypePoignee.simple, // +20
+          1: TypePoignee.double_, // +30
+        },
+      );
+      // Base : 25, Poignées : +50 → 75
+      expect(scores[0], 75 * 3);
       expect(_somme(scores), 0);
     });
 
@@ -386,8 +400,7 @@ void main() {
         nbBouts: 3,
         pointsPreneur: 91,
         petitAuBout: CampPetitAuBout.attaque,
-        poignee: TypePoignee.triple,
-        campPoignee: CampPoignee.attaque,
+        poignees: const {0: TypePoignee.triple},
         chelem: Chelem.annonceReussi,
       );
       // Base : (25+55)×6 = 480

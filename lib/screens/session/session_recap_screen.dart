@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../main.dart' show premiumService;
+import '../../models/player.dart';
 import '../../models/session.dart';
 import '../../services/ads_config.dart';
 import '../../services/session_import_export_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ad_banner.dart';
+import '../../widgets/player_avatar.dart';
 
 /// \u00c9cran r\u00e9capitulatif de fin de session -- classement + stats fun.
 class SessionRecapScreen extends StatelessWidget {
@@ -100,8 +102,7 @@ class SessionRecapScreen extends StatelessWidget {
                     for (var i = 0; i < session.nbJoueurs; i++) ...[
                       _buildPlayerStat(
                         context,
-                        session.joueurs[i].name,
-                        session.joueurs[i].color,
+                        session.joueurs[i],
                         prises[i] ?? 0,
                         taux[i] ?? 0,
                       ),
@@ -203,15 +204,7 @@ class SessionRecapScreen extends StatelessWidget {
         children: [
           Text(medal, style: const TextStyle(fontSize: 20)),
           const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: joueur.color,
-            child: Text(joueur.initials,
-                style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold)),
-          ),
+          PlayerAvatar(player: joueur, radius: 14, fontSize: 10),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -237,22 +230,19 @@ class SessionRecapScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayerStat(BuildContext context, String name, Color color,
+  Widget _buildPlayerStat(BuildContext context, Player joueur,
       int prises, double taux) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 12,
-            backgroundColor: color,
-          ),
+          PlayerAvatar(player: joueur, radius: 12, fontSize: 9),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name,
+                Text(joueur.name,
                     style: const TextStyle(fontWeight: FontWeight.w500)),
                 Text(
                   '$prises prise(s) \u2014 ${(taux * 100).round()}% de r\u00e9ussite',

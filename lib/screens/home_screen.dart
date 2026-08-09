@@ -12,7 +12,6 @@ import 'session/player_stats_screen.dart';
 import 'session/players_screen.dart';
 import 'session/session_board_screen.dart';
 import 'session/session_history_screen.dart';
-import 'trump_tracker_screen.dart';
 
 /// Écran d'accueil avec navigation principale.
 class HomeScreen extends StatefulWidget {
@@ -166,14 +165,6 @@ class _HomeScreenState extends State<HomeScreen>
                     'Sélectionnez vos cartes et obtenez une recommandation',
                 iconColor: t.gold,
                 onTap: () => _pushAndRefresh(const PlayerCountScreen()),
-              ),
-              const SizedBox(height: 8),
-              _FeatureCard(
-                icon: Icons.visibility,
-                title: 'Suivi des atouts',
-                subtitle: 'Comptez les atouts tombés pendant la partie',
-                iconColor: t.appele,
-                onTap: () => _pushAndRefresh(const TrumpTrackerScreen()),
               ),
               const SizedBox(height: 8),
               _FeatureCard(

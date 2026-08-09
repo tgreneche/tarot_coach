@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../main.dart' show premiumService;
+import '../../main.dart' show premiumService, interstitialAdService;
 import '../../models/player.dart';
 import '../../models/session.dart';
 import '../../services/ads_config.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ad_banner.dart';
+import '../../widgets/player_avatar.dart';
 import 'players_screen.dart';
 import 'session_board_screen.dart';
 
@@ -132,16 +133,10 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
                           final p = _selectedPlayers[i];
                           return ListTile(
                             key: ValueKey(p.id),
-                            leading: CircleAvatar(
+                            leading: PlayerAvatar(
+                              player: p,
                               radius: 16,
-                              backgroundColor: p.color,
-                              child: Text(
-                                p.initials,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold),
-                              ),
+                              fontSize: 12,
                             ),
                             title: Text(p.name),
                             subtitle:
@@ -283,6 +278,10 @@ class _NewSessionScreenState extends State<NewSessionScreen> {
     );
 
     await StorageService.instance.createSession(session);
+
+    // Interstitiel plein \u00e9cran avant la navigation. Le cap interne de 2 min
+    // \u00e9vite l'effet "matraquage" si la pub de cl\u00f4ture vient d'\u00eatre affich\u00e9e.
+    await interstitialAdService.onSessionLancee();
 
     if (mounted) {
       // Remplace l'\u00e9cran pour aller directement au tableau de scores

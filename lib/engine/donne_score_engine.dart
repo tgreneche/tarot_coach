@@ -18,8 +18,7 @@ class DonneScoreEngine {
     int? appeleIndex, // 5 ou 6 joueurs
     int? mortIndex, // 6 joueurs uniquement
     CampPetitAuBout petitAuBout = CampPetitAuBout.aucun,
-    TypePoignee poignee = TypePoignee.aucune,
-    CampPoignee? campPoignee,
+    Map<int, TypePoignee> poignees = const {},
     Chelem chelem = Chelem.aucun,
   }) {
     // Mode 6 joueurs : déléguer au moteur 5 joueurs puis réinsérer le mort
@@ -32,8 +31,7 @@ class DonneScoreEngine {
         appeleIndex: appeleIndex,
         mortIndex: mortIndex,
         petitAuBout: petitAuBout,
-        poignee: poignee,
-        campPoignee: campPoignee,
+        poignees: poignees,
         chelem: chelem,
       );
     }
@@ -58,14 +56,13 @@ class DonneScoreEngine {
       primePetitAuBout = -(10 * contrat.multiplicateur);
     }
 
-    // === 3. Prime Poignée ===
-    // Fixe (non multipliée). Toujours en faveur du camp vainqueur.
-    int primePoignee = 0;
-    if (poignee != TypePoignee.aucune) {
-      primePoignee = poignee.bonus;
-      // Si le contrat est chuté, la prime va à la défense
-      if (!fait) primePoignee = -primePoignee;
-    }
+    // === 3. Primes Poignées ===
+    // Fixes (non multipliées). Chaque poignée annoncée (quel que soit
+    // le joueur qui l'annonce) est acquise au camp vainqueur (règle FFT),
+    // les primes se cumulent.
+    int primePoignee = poignees.values.fold(0, (s, p) => s + p.bonus);
+    // Si le contrat est chuté, les primes vont à la défense
+    if (!fait) primePoignee = -primePoignee;
 
     // === 4. Prime Chelem ===
     // Fixe (non multipliée).
@@ -82,7 +79,8 @@ class DonneScoreEngine {
     }
 
     // === 5. Score total de la donne (du point de vue du preneur) ===
-    final scoreDonne = scoreContrat + primePetitAuBout + primePoignee + primeChelem;
+    final scoreDonne =
+        scoreContrat + primePetitAuBout + primePoignee + primeChelem;
 
     // === 6. Répartition entre joueurs ===
     return _repartir(
@@ -103,8 +101,7 @@ class DonneScoreEngine {
     int? appeleIndex,
     required int mortIndex,
     CampPetitAuBout petitAuBout = CampPetitAuBout.aucun,
-    TypePoignee poignee = TypePoignee.aucune,
-    CampPoignee? campPoignee,
+    Map<int, TypePoignee> poignees = const {},
     Chelem chelem = Chelem.aucun,
   }) {
     // Liste des 5 joueurs actifs (indices originaux, sans le mort)
@@ -132,8 +129,7 @@ class DonneScoreEngine {
       pointsPreneur: pointsPreneur,
       appeleIndex: localAppeleIndex,
       petitAuBout: petitAuBout,
-      poignee: poignee,
-      campPoignee: campPoignee,
+      poignees: poignees,
       chelem: chelem,
     );
 
@@ -226,7 +222,7 @@ class DonneScoreEngine {
     required int nbBouts,
     required double pointsPreneur,
     CampPetitAuBout petitAuBout = CampPetitAuBout.aucun,
-    TypePoignee poignee = TypePoignee.aucune,
+    Map<int, TypePoignee> poignees = const {},
     Chelem chelem = Chelem.aucun,
   }) {
     final objectif = pointsRequis(nbBouts);
@@ -240,7 +236,7 @@ class DonneScoreEngine {
       petitPrime = 10 * contrat.multiplicateur;
     }
 
-    int poigneePrime = poignee.bonus;
+    int poigneePrime = poignees.values.fold(0, (s, p) => s + p.bonus);
     int chelemPrime = chelem.prime.abs();
 
     return ScoreDetail(

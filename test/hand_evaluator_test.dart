@@ -501,4 +501,230 @@ void main() {
       expect(a.possibleHandle, HandleType.triple);
     });
   });
+
+  // ============================================================
+  group('HandEvaluator — Conseils contextuels (cartes dehors)', () {
+    /// Main du rapport de bug : 11 atouts dont les 3 bouts et la séquence
+    /// 21..13, plus les 4 Rois (15 cartes, tarot à 5 joueurs).
+    List<TarotCard> mainQuatreRois() => [
+          atout(0), // Excuse
+          atout(1), // Petit
+          for (var r = 13; r <= 21; r++) atout(r),
+          roi(TarotSuit.coeur),
+          roi(TarotSuit.carreau),
+          roi(TarotSuit.trefle),
+          roi(TarotSuit.pique),
+        ];
+
+    test('4 Rois en main → aucun conseil ne mentionne des Rois adverses', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      expect(a.kingCount, 4);
+      for (final tip in a.tips) {
+        expect(tip.contains('Rois adverses'), isFalse,
+            reason: 'Conseil incohérent avec 4 Rois en main : $tip');
+        expect(tip.contains('Rois encore dehors'), isFalse,
+            reason: 'Conseil incohérent avec 4 Rois en main : $tip');
+      }
+    });
+
+    test('4 Rois + 21 + séquence → le conseil parle de plis assurés', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      expect(a.tips.any((t) => t.contains('4 Rois sont dans votre main')),
+          isTrue);
+    });
+
+    test('Main du rapport → conseil Chelem présent', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      expect(a.tips.any((t) => t.contains('Chelem')), isTrue);
+    });
+
+    test('4 Rois secs → un seul conseil regroupé, pas quatre', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      final kingTips = a.tips.where((t) => t.startsWith('👑')).toList();
+      expect(kingTips.length, 1);
+      expect(kingTips.first, contains('4 Rois'));
+      // Main dominante : le plan est de purger, pas de « protéger » les Rois.
+      expect(kingTips.first, contains('maitres'));
+    });
+
+    test('Nombre d\'atouts dehors chiffré dans le conseil d\'attaque', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      // 10 atouts réels en main → 21 - 10 = 11 dehors.
+      expect(a.tips.any((t) => t.contains('11 atouts dehors')), isTrue);
+    });
+
+    test('Poignée atteinte sans l\'Excuse → pas d\'avertissement Excuse', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      // 10 atouts réels = seuil Double à 5J atteint sans compter l'Excuse.
+      final poignee = a.tips.firstWhere((t) => t.contains('Poignee Double'));
+      expect(poignee.contains('Excuse'), isFalse);
+    });
+
+    test('Rois dehors → le conseil 21+séquence nomme leurs couleurs', () {
+      // 7 atouts (21..17, 5, 6), mariage à cœur, 15 cartes à 5J.
+      final hand = [
+        for (var r = 17; r <= 21; r++) atout(r),
+        atout(5),
+        atout(6),
+        roi(TarotSuit.coeur),
+        dame(TarotSuit.coeur),
+        carte(TarotSuit.carreau, 2),
+        carte(TarotSuit.carreau, 3),
+        carte(TarotSuit.trefle, 2),
+        carte(TarotSuit.trefle, 3),
+        carte(TarotSuit.pique, 2),
+        carte(TarotSuit.pique, 3),
+      ];
+      final a = HandEvaluator.evaluate(hand, playerCount: PlayerCount.five);
+      expect(a.recommendation.contract, isNot(ContractType.passe));
+      expect(
+          a.tips.any((t) =>
+              t.contains('Rois encore dehors') &&
+              t.contains('Carreau') &&
+              t.contains('Trèfle') &&
+              t.contains('Pique')),
+          isTrue);
+      // Main forte mais pas dominante : pas de conseil Chelem.
+      expect(a.tips.any((t) => t.contains('Chelem')), isFalse);
+    });
+
+    test('Chicane → le conseil de coupe nomme le Roi forcément dehors', () {
+      // 4J, 18 cartes, chicane à pique.
+      final hand = [
+        for (var r = 14; r <= 21; r++) atout(r),
+        roi(TarotSuit.coeur),
+        dame(TarotSuit.coeur),
+        carte(TarotSuit.coeur, 2),
+        roi(TarotSuit.carreau),
+        carte(TarotSuit.carreau, 2),
+        carte(TarotSuit.carreau, 3),
+        carte(TarotSuit.trefle, 2),
+        carte(TarotSuit.trefle, 3),
+        carte(TarotSuit.trefle, 4),
+        carte(TarotSuit.trefle, 5),
+      ];
+      final a = HandEvaluator.evaluate(hand, playerCount: PlayerCount.four);
+      expect(a.recommendation.contract, isNot(ContractType.passe));
+      expect(a.tips.any((t) => t.contains('couper le Roi de Pique')), isTrue);
+    });
+
+    test('Poignée possible uniquement avec l\'Excuse → avertissement', () {
+      // 5J : 9 atouts réels + Excuse = 10 (seuil Double), il faut l'Excuse.
+      final hand = [
+        atout(0), // Excuse
+        for (var r = 2; r <= 10; r++) atout(r),
+        roi(TarotSuit.coeur),
+        dame(TarotSuit.coeur),
+        roi(TarotSuit.carreau),
+        carte(TarotSuit.trefle, 2),
+        carte(TarotSuit.pique, 2),
+      ];
+      final a = HandEvaluator.evaluate(hand, playerCount: PlayerCount.five);
+      expect(a.recommendation.contract, isNot(ContractType.passe));
+      expect(
+          a.tips.any((t) =>
+              t.contains('Poignee Double') &&
+              t.contains('Excuse') &&
+              t.contains('revele')),
+          isTrue);
+    });
+
+    test('Défense avec 21 ET Petit → pas de « Petit du preneur »', () {
+      final hand = buildHand(trumpRanks: [21, 1, 2], padToSize: 18);
+      final a = HandEvaluator.evaluate(hand, playerCount: PlayerCount.four);
+      expect(a.recommendation.contract, ContractType.passe);
+      expect(a.tips.any((t) => t.contains('Petit du preneur')), isFalse);
+      expect(a.tips.any((t) => t.contains('21 ET le Petit')), isTrue);
+    });
+
+    test('Défense avec 21 sans Petit → conseil « Petit du preneur » conservé',
+        () {
+      final hand = buildHand(trumpRanks: [21, 2, 3], padToSize: 18);
+      final a = HandEvaluator.evaluate(hand, playerCount: PlayerCount.four);
+      expect(a.recommendation.contract, ContractType.passe);
+      expect(a.tips.any((t) => t.contains('Petit du preneur')), isTrue);
+    });
+  });
+
+  // ============================================================
+  group('HandEvaluator — Estimation des plis & confiance', () {
+    /// Même main que le rapport de bug (voir groupe précédent).
+    List<TarotCard> mainQuatreRois() => [
+          atout(0),
+          atout(1),
+          for (var r = 13; r <= 21; r++) atout(r),
+          roi(TarotSuit.coeur),
+          roi(TarotSuit.carreau),
+          roi(TarotSuit.trefle),
+          roi(TarotSuit.pique),
+        ];
+
+    test('Main dominante → ~15 plis estimés (Rois secs = plis certains)', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      // 10 atouts maîtres après purge + 4 Rois devenus maîtres
+      // + Excuse au dernier pli (chelem) = 15 plis sur 15.
+      expect(a.estimatedTricks, 15);
+    });
+
+    test('Main dominante → Garde Contre avec confiance saturée', () {
+      final a = HandEvaluator.evaluate(mainQuatreRois(),
+          playerCount: PlayerCount.five);
+      expect(a.recommendation.contract, ContractType.gardeContre);
+      expect(a.recommendation.confidence, greaterThanOrEqualTo(0.8));
+    });
+
+    test('Main ordinaire : Rois secs comptés à demi, pas de régime purge', () {
+      // consecutiveTop = 2 (21, 20 puis trou) → pas de purge garantie.
+      final hand = [
+        atout(21),
+        atout(20),
+        atout(10),
+        atout(9),
+        atout(8),
+        atout(7),
+        atout(6),
+        atout(5),
+        roi(TarotSuit.coeur),
+        roi(TarotSuit.carreau),
+        carte(TarotSuit.trefle, 2),
+        carte(TarotSuit.trefle, 3),
+        carte(TarotSuit.trefle, 4),
+        carte(TarotSuit.trefle, 5),
+        carte(TarotSuit.pique, 2),
+        carte(TarotSuit.pique, 3),
+        carte(TarotSuit.pique, 4),
+        carte(TarotSuit.pique, 5),
+      ];
+      final a = HandEvaluator.evaluate(hand, playerCount: PlayerCount.four);
+      // 2 atouts maîtres + 2 Rois secs (1 pli pour 2) = 3 plis.
+      expect(a.estimatedTricks, 3);
+    });
+
+    test('Contrat tout juste atteint → confiance modérée (~0.5-0.7)', () {
+      // 52 pts à 5J avec équipier : Garde (seuil 49) de justesse.
+      final hand = [
+        for (var r = 17; r <= 21; r++) atout(r),
+        atout(5),
+        atout(6),
+        roi(TarotSuit.coeur),
+        dame(TarotSuit.coeur),
+        carte(TarotSuit.carreau, 2),
+        carte(TarotSuit.carreau, 3),
+        carte(TarotSuit.trefle, 2),
+        carte(TarotSuit.trefle, 3),
+        carte(TarotSuit.pique, 2),
+        carte(TarotSuit.pique, 3),
+      ];
+      final a = HandEvaluator.evaluate(hand, playerCount: PlayerCount.five);
+      expect(a.recommendation.contract, ContractType.garde);
+      expect(a.recommendation.confidence, inInclusiveRange(0.5, 0.7));
+    });
+  });
 }

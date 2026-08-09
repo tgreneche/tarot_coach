@@ -6,6 +6,7 @@ import '../../services/stats_service.dart';
 import '../../services/storage_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/ad_banner.dart';
+import '../../widgets/player_avatar.dart';
 
 /// Statistiques agrégées par joueur sur tout l'historique des sessions.
 class PlayerStatsScreen extends StatefulWidget {
@@ -113,16 +114,7 @@ class _PlayerStatsCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
       child: ExpansionTile(
-        leading: CircleAvatar(
-          backgroundColor: stats.player.color,
-          child: Text(
-            stats.player.initials,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+        leading: PlayerAvatar(player: stats.player),
         title: Text(
           stats.player.name,
           style: t.titleFont(fontSize: 18, fontWeight: FontWeight.w700),

@@ -319,6 +319,34 @@ class HandEvaluator {
     return count;
   }
 
+  /// Tours d'atout necessaires (en moyenne) pour faire tomber les
+  /// [trumpsOut] atouts encore dehors ; 0 si aucun.
+  static int _purgeRoundsFor(int trumpsOut, PlayerCount playerCount) =>
+      trumpsOut == 0 ? 0 : (trumpsOut / (playerCount.count - 1)).ceil();
+
+  /// Une main est "dominante" quand sa sequence maitre (21, 20, 19...)
+  /// suffit a elle seule a purger tous les atouts dehors.
+  static bool _isDominant(int consecutiveTop, int purgeRounds) =>
+      consecutiveTop >= 3 && consecutiveTop >= purgeRounds;
+
+  /// Nombre de cartes de couleur en sequence depuis le Roi (Roi, Roi+Dame,
+  /// Roi+Dame+Cavalier...) : toutes garanties maitresses une fois l'atout
+  /// purge.
+  static int _masterSuitCards(List<TarotCard> hand) {
+    int count = 0;
+    for (final suit in TarotSuit.values) {
+      if (suit == TarotSuit.atout) continue;
+      for (int r = 14; r >= 1; r--) {
+        if (hand.any((c) => c.suit == suit && c.rank == r)) {
+          count++;
+        } else {
+          break;
+        }
+      }
+    }
+    return count;
+  }
+
   /// Calcule la strategie d'appel du Roi (specifique au tarot a 5J).
   ///
   /// - 0 Roi en main : on appelle un Roi qu'on n'a pas -> equipier (souvent
@@ -411,10 +439,15 @@ class HandEvaluator {
   /// Estime grossierement le nombre de plis que la main peut gagner
   /// **avant** de tirer du chien.
   ///
-  /// Methode simplifiee :
-  /// - Chaque atout en sequence depuis le 21 = 1 pli sur.
-  /// - Chaque Roi protege (>= 3 cartes dans la couleur) = 1 pli probable.
-  /// - Chaque chicane (couleur a 0) = autant de coupes que d'atouts moyens+.
+  /// Deux regimes :
+  /// - **Main dominante** (la sequence maitre 21, 20, 19... suffit a purger
+  ///   tous les atouts dehors) : chaque atout restant devient maitre, puis
+  ///   les tetes de couleur en sequence depuis le Roi encaissent — un Roi
+  ///   sec est alors un pli certain, pas une faiblesse. Si toutes les autres
+  ///   cartes sont maitresses, l'Excuse gagne le dernier pli (regle du
+  ///   chelem).
+  /// - **Main ordinaire** : atouts maitres + Rois proteges (>= 3 cartes)
+  ///   + Rois peu proteges comptes a demi + coupes sur chicanes.
   static int _estimateTricks({
     required List<TarotCard> sorted,
     required Map<TarotSuit, int> suitLengths,
@@ -424,15 +457,36 @@ class HandEvaluator {
     required PlayerCount playerCount,
     required bool playsAlone,
   }) {
+    final realTrumps = sorted.where((c) => c.isTrump && !c.isExcuse).length;
+    final hasExcuse = sorted.any((c) => c.isExcuse);
+    final purgeRounds = _purgeRoundsFor(21 - realTrumps, playerCount);
+
+    // === Main dominante : purge garantie par la sequence maitre ===
+    if (_isDominant(consecutiveTop, purgeRounds)) {
+      int tricks = realTrumps + _masterSuitCards(sorted);
+      // Excuse au dernier pli d'un chelem : ne gagne que si tout le reste
+      // du jeu est deja maitre.
+      if (hasExcuse && tricks >= sorted.length - 1) tricks += 1;
+      return tricks.clamp(0, sorted.length);
+    }
+
+    // === Main ordinaire ===
     int tricks = consecutiveTop;
 
-    // Rois "proteges" : >= 3 cartes dans la couleur
+    // Rois proteges (>= 3 cartes dans la couleur) : 1 pli probable chacun.
+    // Rois peu proteges : 1 pli pour 2 (souvent encaisses au 1er tour de la
+    // couleur, mais sans garantie de timing).
     int safeKings = 0;
+    int fragileKings = 0;
     for (final king in kings) {
       final len = suitLengths[king.suit] ?? 0;
-      if (len >= 3) safeKings++;
+      if (len >= 3) {
+        safeKings++;
+      } else {
+        fragileKings++;
+      }
     }
-    tricks += safeKings;
+    tricks += safeKings + fragileKings ~/ 2;
 
     // Chicanes -> coupes possibles (limite par le nombre d'atouts)
     final voidsCount = suitLengths.entries
@@ -441,7 +495,6 @@ class HandEvaluator {
     final extraTrumps = (trumpCount - consecutiveTop).clamp(0, 99);
     tricks += (voidsCount * 2).clamp(0, extraTrumps);
 
-    // Singletons d'as ou de figure haute (compte deja dans les Rois)
     return tricks;
   }
 
@@ -478,9 +531,13 @@ class HandEvaluator {
     final petitProtected = !hasPetit || trumpsAbovePetit >= 5;
     final total = points.total;
 
-    // Confidence : position du score dans la plage du seuil au max (~110).
-    double confidenceFor(int floor) =>
-        ((total - floor) / (110 - floor)).clamp(0.2, 0.95);
+    // Confiance dans le contrat recommande : 0.5 quand le seuil est tout
+    // juste atteint (choix limite avec le contrat inferieur), 0.95 des que
+    // la marge couvre la largeur d'une bande de contrat. Une main largement
+    // au-dessus du seuil sature donc a "tres confiant", contrairement a
+    // l'ancienne echelle lineaire vers un maximum arbitraire (~110 pts).
+    double confidenceFor(int floor, int band) =>
+        (0.5 + 0.45 * (total - floor) / band).clamp(0.5, 0.95);
 
     // ===== Garde Contre =====
     // Condition : seuil + 21 + 2 bouts + au moins 3 atouts maitres
@@ -490,7 +547,8 @@ class HandEvaluator {
         consecutiveTop >= 3) {
       return ContractRecommendation(
         contract: ContractType.gardeContre,
-        confidence: confidenceFor(thresholds.gardeContre),
+        confidence: confidenceFor(thresholds.gardeContre,
+            thresholds.gardeContre - thresholds.gardeSans),
         reasoning: _buildReasoning(
           points: points,
           thresholds: thresholds,
@@ -515,7 +573,8 @@ class HandEvaluator {
         consecutiveTop >= 2) {
       return ContractRecommendation(
         contract: ContractType.gardeSans,
-        confidence: confidenceFor(thresholds.gardeSans),
+        confidence: confidenceFor(thresholds.gardeSans,
+            thresholds.gardeContre - thresholds.gardeSans),
         reasoning: _buildReasoning(
           points: points,
           thresholds: thresholds,
@@ -537,7 +596,8 @@ class HandEvaluator {
     if (total >= thresholds.garde) {
       return ContractRecommendation(
         contract: ContractType.garde,
-        confidence: confidenceFor(thresholds.garde),
+        confidence: confidenceFor(
+            thresholds.garde, thresholds.gardeSans - thresholds.garde),
         reasoning: _buildReasoning(
           points: points,
           thresholds: thresholds,
@@ -572,7 +632,8 @@ class HandEvaluator {
       if (hasPetit && !petitProtected) extra += ' ⚠️ Petit peu protege !';
 
       // Confidence reduite si Petit non protege
-      var conf = confidenceFor(thresholds.petite);
+      var conf = confidenceFor(
+          thresholds.petite, thresholds.garde - thresholds.petite);
       if (hasPetit && !petitProtected) conf = (conf - 0.15).clamp(0.2, 0.95);
 
       return ContractRecommendation(
@@ -677,6 +738,12 @@ class HandEvaluator {
         .where((e) => e.key != TarotSuit.atout && e.value == 0)
         .toList();
 
+    // Cartes encore DEHORS (adversaires + chien) : complement exact de la
+    // main sur les 78 cartes. Reference obligatoire avant tout conseil qui
+    // parle des cartes adverses (on ne "force" pas des Rois qu'on detient
+    // soi-meme).
+    final outside = _OutsideCards.of(hand);
+
     // === Cas PASSE : conseils de defense ===
     if (recommendation.contract == ContractType.passe) {
       if (hasPetit) {
@@ -684,8 +751,14 @@ class HandEvaluator {
             '(idealement sous une coupe d\'un partenaire).');
       }
       if (has21) {
-        tips.add('💎 Vous avez le 21 : il prendra le Petit du preneur si '
-            'celui-ci le sort. Restez patient.');
+        if (hasPetit) {
+          tips.add('💎 Vous avez le 21 ET le Petit : le 21 reste maitre a '
+              'l\'atout, servez-vous en pour couvrir la sortie de votre '
+              'Petit.');
+        } else {
+          tips.add('💎 Vous avez le 21 : il prendra le Petit du preneur si '
+              'celui-ci le sort. Restez patient.');
+        }
       }
       if (kings.length >= 2) {
         tips.add('👑 ${kings.length} Rois en defense : faites-les passer '
@@ -694,8 +767,8 @@ class HandEvaluator {
       if (voids.isNotEmpty) {
         final suitNames = voids.map((e) => e.key.label).join(' et ');
         tips.add(
-            '✂️ Chicane a $suitNames : excellent pour couper les Rois du '
-            'preneur ou de son equipier.');
+            '✂️ Chicane a $suitNames : excellent pour couper les plis du '
+            'preneur dans ces couleurs.');
       }
       tips.add('🛡️ En defense, communiquez par vos cartes : signaux courts '
           '(petite carte = j\'ai), longs (carte forte = je n\'ai pas).');
@@ -704,18 +777,35 @@ class HandEvaluator {
 
     // === Cas PRISE : conseils d'attaque ===
 
+    final realTrumps = trumpCount - (hasExcuse ? 1 : 0);
+    // Tours d'atout necessaires (en moyenne) pour purger les atouts dehors,
+    // et capacite a le faire avec la seule sequence maitre (21, 20, 19...).
+    final purgeRounds = _purgeRoundsFor(outside.trumps, playerCount);
+    final canPurgeAll = _isDominant(consecutiveTop, purgeRounds);
+
     // --- Conseils specifiques au tarot a 5J ---
-    if (playerCount == PlayerCount.five) {
-      if (kingCallStrategy != null) {
-        if (kingCallStrategy.mustCallQueen) {
-          tips.add('♛ Vous avez les 4 Rois -> appelez une Dame. Choisissez '
-              'la couleur la plus utile (longue couleur ou chicane). Jouez '
-              'comme si vous etiez SEUL.');
-        } else if (kingCallStrategy.suitToCall != null) {
-          tips.add('🤝 ${kingCallStrategy.explanation}');
-        } else {
-          tips.add('🤝 ${kingCallStrategy.explanation}');
-        }
+    if (playerCount == PlayerCount.five && kingCallStrategy != null) {
+      if (kingCallStrategy.mustCallQueen) {
+        tips.add('♛ Vous avez les 4 Rois -> appelez une Dame. Choisissez '
+            'la couleur la plus utile (longue couleur ou chicane). Jouez '
+            'comme si vous etiez SEUL.');
+      } else {
+        tips.add('🤝 ${kingCallStrategy.explanation}');
+      }
+    }
+
+    // --- Chelem envisageable ? ---
+    // Main dominante : la sequence maitre suffit a purger l'atout, puis
+    // chaque carte restante gagne son pli (atouts devenus maitres, tetes de
+    // couleur en sequence depuis le Roi, Excuse gardee pour le dernier pli).
+    if (canPurgeAll) {
+      final sureTricks =
+          realTrumps + (hasExcuse ? 1 : 0) + _masterSuitCards(hand);
+      if (sureTricks >= hand.length) {
+        tips.add('🏅 Chelem envisageable : ~$purgeRounds tours d\'atout '
+            'purgent les ${outside.trumps} atouts dehors, ensuite tout '
+            'votre jeu est maitre. Annonce et reussi : +400 pts (reussi '
+            'sans annonce : +200, annonce mais rate : -200).');
       }
     }
 
@@ -728,12 +818,24 @@ class HandEvaluator {
                 : 7);
 
     if (shouldPullTrumps && consecutiveTop >= 2) {
+      final toFree = <String>[
+        if (kings.isNotEmpty) 'vos Rois',
+        if (voids.isNotEmpty) 'vos coupes',
+      ];
+      final freeTxt =
+          toFree.isEmpty ? 'vos cartes hautes' : toFree.join(' et ');
       tips.add('💥 Attaquez atout d\'entree (vos $consecutiveTop atouts '
-          'maitres) pour chasser ceux des adversaires et liberer vos Rois '
-          'et coupes.');
+          'maitres) : il reste ${outside.trumps} atouts dehors '
+          '(adversaires + chien), purgez-les pour liberer $freeTxt.');
     } else if (consecutiveTop >= 1) {
+      final captures = <String>[
+        if (outside.kingSuits.isNotEmpty) 'Roi',
+        if (outside.queenSuits.isNotEmpty) 'Dame',
+        if (!hasPetit) 'Petit',
+      ];
       tips.add('🎯 Vous avez le 21 : utilisez-le pour capturer une carte '
-          'de valeur (Roi, Dame, Bout) au bon moment.');
+          'de valeur au bon moment'
+          '${captures.isEmpty ? '' : ' (${captures.join(', ')})'}.');
     } else if (trumpCount >= 6) {
       tips.add('⏳ Pas d\'atout maitre garanti : evitez d\'attaquer atout, '
           'laissez la defense vider les hauts atouts d\'abord.');
@@ -759,8 +861,16 @@ class HandEvaluator {
 
     // --- 21 ---
     if (has21 && consecutiveTop >= 2) {
-      tips.add('💎 21 + sequence : vous controlez la fin de partie. '
-          'Vos derniers atouts forceront les Rois adverses.');
+      if (outside.kingSuits.isEmpty) {
+        tips.add('💎 21 + sequence : vous controlez la fin de partie. Les '
+            '4 Rois sont dans votre main : une fois les atouts purges, ce '
+            'sont autant de plis assures.');
+      } else {
+        final kingNames = outside.kingSuits.map((s) => s.label).join(', ');
+        tips.add('💎 21 + sequence : vous controlez la fin de partie. Vos '
+            'derniers atouts forceront les Rois encore dehors '
+            '($kingNames).');
+      }
     }
 
     // --- Excuse ---
@@ -772,8 +882,11 @@ class HandEvaluator {
     // --- Chicanes ---
     if (voids.isNotEmpty) {
       final suitNames = voids.map((e) => e.key.label).join(' et ');
+      // Une chicane implique que le Roi de la couleur est forcement dehors.
+      final targets =
+          voids.map((e) => 'le Roi de ${e.key.label}').join(', ');
       tips.add('✂️ Chicane a $suitNames : utilisez vos atouts moyens '
-          '(12-17) pour couper les Rois et Dames adverses.');
+          '(12-17) pour couper $targets des que la couleur est jouee.');
     }
 
     // --- Rois fragiles ---
@@ -781,10 +894,34 @@ class HandEvaluator {
       final len = suitLengths[k.suit] ?? 0;
       return len <= 2;
     }).toList();
-    for (final king in fragileKings) {
-      tips.add('👑 Roi de ${king.suit.label} peu protege '
-          '(${suitLengths[king.suit]} cartes) : chassez les atouts AVANT '
-          'de le sortir, ou laissez-le pour un pli de fin.');
+    if (fragileKings.isNotEmpty) {
+      String guard(TarotSuit s) {
+        final n = suitLengths[s] ?? 0;
+        return n <= 1 ? '1 carte' : '$n cartes';
+      }
+      // Avec de quoi purger l'atout, un Roi sec n'est pas une faiblesse :
+      // il devient maitre une fois les atouts adverses tombes.
+      if (fragileKings.length == 1) {
+        final king = fragileKings.first;
+        tips.add(canPurgeAll
+            ? '👑 Roi de ${king.suit.label} peu protege '
+                '(${guard(king.suit)}) : purgez l\'atout avec vos maitres, '
+                'il deviendra maitre a son tour.'
+            : '👑 Roi de ${king.suit.label} peu protege '
+                '(${guard(king.suit)}) : chassez les atouts AVANT de le '
+                'sortir, ou laissez-le pour un pli de fin.');
+      } else {
+        final list = fragileKings
+            .map((k) => '${k.suit.label} (${guard(k.suit)})')
+            .join(', ');
+        tips.add(canPurgeAll
+            ? '👑 ${fragileKings.length} Rois peu proteges : $list. '
+                'Purgez l\'atout avec vos maitres : ils deviendront '
+                'maitres a leur tour.'
+            : '👑 ${fragileKings.length} Rois peu proteges : $list. '
+                'Chassez les atouts AVANT de les sortir, ou gardez-les '
+                'pour les plis de fin.');
+      }
     }
 
     // --- Longues couleurs (sans Roi) ---
@@ -814,11 +951,60 @@ class HandEvaluator {
           : trumpCount >= seuils.doubleSeuil
               ? 30
               : 20;
-      tips.add('✋ Poignee $type possible (+$bonus pts) : annoncez avant le '
-          '1er pli et etalez l\'ensemble exact des atouts requis.');
+      final seuilType = trumpCount >= seuils.triple
+          ? seuils.triple
+          : trumpCount >= seuils.doubleSeuil
+              ? seuils.doubleSeuil
+              : seuils.simple;
+      var poigneeTip =
+          '✋ Poignee $type possible (+$bonus pts) : annoncez avant le '
+          '1er pli et etalez l\'ensemble exact des atouts requis.';
+      // Poignee atteinte uniquement grace a l'Excuse : l'etaler revele
+      // au passage qu'on ne detient aucun autre atout (regle FFT).
+      if (realTrumps < seuilType) {
+        poigneeTip += ' ⚠️ Il faudra y inclure l\'Excuse : l\'etaler '
+            'revele que vous n\'avez aucun autre atout.';
+      }
+      tips.add(poigneeTip);
     }
 
     return tips;
+  }
+}
+
+/// Cartes encore "dehors" (chez les adversaires ou au chien) : complement
+/// exact de la main sur le jeu de 78 cartes.
+///
+/// Sert a contextualiser les conseils : on ne parle de "Rois adverses" ou
+/// de cartes a capturer que si elles sont reellement hors de la main.
+class _OutsideCards {
+  /// Couleurs dont le Roi n'est PAS dans la main.
+  final List<TarotSuit> kingSuits;
+
+  /// Couleurs dont la Dame n'est PAS dans la main.
+  final List<TarotSuit> queenSuits;
+
+  /// Nombre d'atouts (hors Excuse) dehors.
+  final int trumps;
+
+  const _OutsideCards({
+    required this.kingSuits,
+    required this.queenSuits,
+    required this.trumps,
+  });
+
+  factory _OutsideCards.of(List<TarotCard> hand) {
+    final suits =
+        TarotSuit.values.where((s) => s != TarotSuit.atout).toList();
+    List<TarotSuit> missing(int rank) => suits
+        .where((s) => !hand.any((c) => c.suit == s && c.rank == rank))
+        .toList();
+    final trumpsInHand = hand.where((c) => c.isTrump && !c.isExcuse).length;
+    return _OutsideCards(
+      kingSuits: missing(14),
+      queenSuits: missing(13),
+      trumps: 21 - trumpsInHand,
+    );
   }
 }
 

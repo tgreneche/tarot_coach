@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/consent_service.dart';
 import '../theme/app_theme.dart';
 
 /// Écran À propos.
@@ -10,6 +11,26 @@ class AboutScreen extends StatefulWidget {
 }
 
 class _AboutScreenState extends State<AboutScreen> {
+  bool _privacyOptionsAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPrivacyOptions();
+  }
+
+  Future<void> _checkPrivacyOptions() async {
+    final required = await ConsentService.instance.isPrivacyOptionsRequired();
+    if (!mounted) return;
+    setState(() => _privacyOptionsAvailable = required);
+  }
+
+  Future<void> _openPrivacyOptions() async {
+    await ConsentService.instance.showPrivacyOptions();
+    // Le statut peut avoir changé : on rafraîchit l'état du bouton.
+    if (mounted) _checkPrivacyOptions();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppTheme.of(context);
@@ -81,7 +102,6 @@ class _AboutScreenState extends State<AboutScreen> {
                     _FeatureBullet('R\u00e8gles officielles FFT consultables hors connexion'),
                     _FeatureBullet('Rotation automatique du donneur'),
                     _FeatureBullet('Analyse de main et recommandation de contrat'),
-                    _FeatureBullet('Suivi des atouts jou\u00e9s en temps r\u00e9el'),
                   ],
                 ),
               ),
@@ -130,6 +150,17 @@ class _AboutScreenState extends State<AboutScreen> {
                       'ou transmise. Toutes les donn\u00e9es sont stock\u00e9es '
                       'localement sur votre appareil.',
                     ),
+                    if (_privacyOptionsAvailable) ...[
+                      const SizedBox(height: 12),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _openPrivacyOptions,
+                          icon: const Icon(Icons.privacy_tip_outlined, size: 18),
+                          label: const Text('Confidentialit\u00e9 des annonces'),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
