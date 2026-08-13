@@ -114,6 +114,21 @@ class HandAnalysis {
     required this.thresholds,
   });
 
+  /// Score maximum atteignable par le bareme pour cette taille de main.
+  ///
+  /// Le bareme cumule volontairement plusieurs signaux pour une meme carte
+  /// (le 21 compte en bout, en atout, en gros atout et en sequence) : son
+  /// plafond depend donc du nombre de cartes distribuees et n'a aucun
+  /// rapport avec les 91 points de cartes du jeu.
+  ///
+  /// Valeurs etablies par recherche exhaustive sur les 78 cartes, verifiees
+  /// par `test/bareme_max_test.dart`.
+  int get maxPoints => switch (playerCount) {
+        PlayerCount.three => 122, // 24 cartes
+        PlayerCount.four => 108, // 18 cartes
+        PlayerCount.five => 101, // 15 cartes
+      };
+
   /// Points necessaires pour gagner selon le nombre de bouts.
   int get pointsNeeded => switch (boutCount) {
         0 => 56,

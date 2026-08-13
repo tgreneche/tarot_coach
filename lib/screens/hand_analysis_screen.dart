@@ -219,14 +219,16 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                       children: [
                         Icon(Icons.calculate, color: t.gold, size: 20),
                         const SizedBox(width: 8),
-                        Text(
-                          'Evaluation en points',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                        Expanded(
+                          child: Text(
+                            'Score d\'évaluation',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
@@ -237,7 +239,8 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                                 Border.all(color: t.gold.withValues(alpha: 0.4)),
                           ),
                           child: Text(
-                            '${widget.analysis.points.total} pts',
+                            '${widget.analysis.points.total}'
+                            ' / ${widget.analysis.maxPoints}',
                             style: t.titleFont(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -249,7 +252,11 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Bareme inspire de le-tarot.fr',
+                      'Barème inspiré de le-tarot.fr — échelle de décision, '
+                      'maximum ${widget.analysis.maxPoints} à '
+                      '${widget.analysis.playerCount.count} joueurs. '
+                      'À ne pas confondre avec les points de cartes '
+                      '(91 dans tout le jeu).',
                       style: t.bodyFont(
                           fontSize: 11, color: t.textSecondary),
                     ),
@@ -275,37 +282,7 @@ class _HandAnalysisScreenState extends State<HandAnalysisScreen>
                       value: widget.analysis.points.distributionPoints,
                     ),
                     const Divider(height: 20),
-                    // Seuils
-                    Text(
-                      'Seuils ${widget.analysis.playerCount.count}J '
-                      '${widget.analysis.playsAlone ? "(solo)" : "(equipier)"}',
-                      style: t.bodyFont(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: t.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    _ThresholdRow(
-                      label: 'Petite',
-                      threshold: widget.analysis.thresholds.petite,
-                      current: widget.analysis.points.total,
-                    ),
-                    _ThresholdRow(
-                      label: 'Garde',
-                      threshold: widget.analysis.thresholds.garde,
-                      current: widget.analysis.points.total,
-                    ),
-                    _ThresholdRow(
-                      label: 'Garde Sans',
-                      threshold: widget.analysis.thresholds.gardeSans,
-                      current: widget.analysis.points.total,
-                    ),
-                    _ThresholdRow(
-                      label: 'Garde Contre',
-                      threshold: widget.analysis.thresholds.gardeContre,
-                      current: widget.analysis.points.total,
-                    ),
+                    _ThresholdsSection(analysis: widget.analysis),
                   ],
                 ),
               ),
@@ -861,66 +838,203 @@ class _PointsLine extends StatelessWidget {
   }
 }
 
+/// Bloc « seuils de prise » : explique a quoi se compare le score, quel
+/// contrat en decoule, et pourquoi un seuil atteint peut malgre tout etre
+/// ecarte (garde-fous de bouts et d'atouts maitres).
+class _ThresholdsSection extends StatelessWidget {
+  final HandAnalysis analysis;
+
+  const _ThresholdsSection({required this.analysis});
+
+  /// Exigences structurelles au-dela du seuil en points.
+  static String? _exigence(ContractType c) => switch (c) {
+        ContractType.gardeContre =>
+          'le 21, au moins 2 bouts et 3 atouts maîtres en séquence',
+        ContractType.gardeSans =>
+          'au moins 2 bouts et 2 atouts maîtres en séquence',
+        _ => null,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppTheme.of(context);
+    final th = analysis.thresholds;
+    final total = analysis.points.total;
+    final reco = analysis.recommendation.contract;
+
+    final paliers = <(ContractType, int)>[
+      (ContractType.petite, th.petite),
+      (ContractType.garde, th.garde),
+      (ContractType.gardeSans, th.gardeSans),
+      (ContractType.gardeContre, th.gardeContre),
+    ];
+
+    // Plus haut palier franchi en points (independamment des garde-fous).
+    var atteint = ContractType.passe;
+    var seuilAtteint = 0;
+    for (final p in paliers) {
+      if (total >= p.$2) {
+        atteint = p.$1;
+        seuilAtteint = p.$2;
+      }
+    }
+    final ecarte = atteint.multiplier > reco.multiplier;
+
+    final contexte = analysis.playerCount == PlayerCount.five
+        ? (analysis.playsAlone
+            ? ' (jeu en solo : 4 Rois en main)'
+            : ' (avec un équipier)')
+        : '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Seuils de prise — ${analysis.playerCount.count} joueurs$contexte',
+          style: t.bodyFont(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: t.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          'Votre score de $total est comparé à chaque seuil. Le contrat '
+          'conseillé est le plus haut seuil atteint, à condition que la '
+          'main ait aussi les bouts et atouts maîtres exigés.',
+          style: t.bodyFont(fontSize: 11, color: t.textSecondary),
+        ),
+        const SizedBox(height: 8),
+        for (final p in paliers)
+          _ThresholdRow(
+            label: p.$1.label,
+            threshold: p.$2,
+            current: total,
+            isRecommended: p.$1 == reco,
+          ),
+        const SizedBox(height: 6),
+        if (reco == ContractType.passe)
+          Text(
+            'Aucun seuil atteint : il manque ${th.petite - total} points '
+            'pour envisager une Petite. Mieux vaut défendre.',
+            style: t.bodyFont(fontSize: 11, color: t.textSecondary),
+          )
+        else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.star, size: 13, color: t.gold),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  'Contrat conseillé : ${reco.label}.',
+                  style: t.bodyFont(fontSize: 11, color: t.textSecondary),
+                ),
+              ),
+            ],
+          ),
+        if (ecarte) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: t.gold.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: t.gold.withValues(alpha: 0.35)),
+            ),
+            child: Text(
+              'Le seuil ${atteint.label} ($seuilAtteint) est atteint en '
+              'points, mais ce contrat exige ${_exigence(atteint)} : votre '
+              'main ne les réunit pas, le conseil reste ${reco.label}.',
+              style: t.bodyFont(fontSize: 11, color: t.textPrimary),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _ThresholdRow extends StatelessWidget {
   final String label;
   final int threshold;
   final int current;
+  final bool isRecommended;
 
   const _ThresholdRow({
     required this.label,
     required this.threshold,
     required this.current,
+    this.isRecommended = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final t = AppTheme.of(context);
     final reached = current >= threshold;
+    final delta = current - threshold;
     final progress = (current / threshold).clamp(0.0, 1.0);
+    final color = isRecommended
+        ? t.gold
+        : reached
+            ? t.success
+            : t.textSecondary;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
-          SizedBox(
-            width: 90,
+          // Largeurs proportionnelles : un libelle a largeur fixe tronquait
+          // « Garde Contre (81) » quelle que soit la taille de l'ecran.
+          Expanded(
+            flex: 6,
             child: Text(
-              label,
+              '$label ($threshold)',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: t.bodyFont(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight:
-                    reached ? FontWeight.w600 : FontWeight.w400,
-                color: reached ? t.success : t.textSecondary,
+                    isRecommended || reached ? FontWeight.w600 : FontWeight.w400,
+                color: color,
               ),
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(
+            flex: 5,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 6,
                 backgroundColor: t.primaryDark,
-                color: reached ? t.success : t.gold,
+                color: isRecommended ? t.gold : (reached ? t.success : t.gold),
               ),
             ),
           ),
           const SizedBox(width: 8),
           SizedBox(
-            width: 56,
+            width: 34,
             child: Text(
-              '$current / $threshold',
+              reached ? '+$delta' : '$delta',
               style: t.bodyFont(
                 fontSize: 11,
-                color: reached ? t.success : t.textSecondary,
+                fontWeight: FontWeight.w600,
+                color: color,
               ),
               textAlign: TextAlign.right,
             ),
           ),
-          if (reached) ...[
-            const SizedBox(width: 4),
-            Icon(Icons.check_circle, size: 14, color: t.success),
-          ],
+          const SizedBox(width: 4),
+          SizedBox(
+            width: 16,
+            child: isRecommended
+                ? Icon(Icons.star, size: 14, color: t.gold)
+                : reached
+                    ? Icon(Icons.check_circle, size: 14, color: t.success)
+                    : null,
+          ),
         ],
       ),
     );

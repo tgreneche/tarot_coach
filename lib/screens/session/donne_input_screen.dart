@@ -134,7 +134,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
     }
     // À 5 ou 6 joueurs : appelé obligatoire
     if (_hasAppelRoi && _appeleIndex == null) {
-      return (message: 'Qui avait le Roi appelé ?', field: 'appele');
+      return (message: 'Indiquez le joueur appelé', field: 'appele');
     }
     return null;
   }
@@ -462,7 +462,7 @@ class _DonneInputScreenState extends State<DonneInputScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: Text('Qui avait le Roi ?',
+                            child: Text('Joueur appelé ?',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: _errorField == 'appele' ? t.error : null,
